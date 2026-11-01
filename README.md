@@ -7,6 +7,7 @@
 - **直接開**:下載 `dist/index.html`,用 Chrome / Edge / Safari 開啟即可(第一次使用 OCR 需要網路下載辨識引擎)。
 - **本機伺服器**:`python -m card_scanner serve`,開 http://127.0.0.1:8780/ ;加 `--host 0.0.0.0` 讓同網段的手機也能開。
 - **放到任何靜態網站**(GitHub Pages、公司內網網頁伺服器):把 `dist/index.html` 放上去即可。
+- **GitHub Pages**:`.github/workflows/pages.yml` 在 `main` 分支有推送時自動測試、建置並發布(第一次請到 repo 的 Settings → Pages,把 Source 設為「GitHub Actions」)。網址為 `https://<帳號>.github.io/<repo>/`。注意 GitHub Pages 是公開網址,但名片資料存在各自的瀏覽器,不會出現在網站上。
 - 修改 `card_scanner/web/` 後執行 `python -m card_scanner build` 重新產生 `dist/index.html`(測試會檢查它是否為最新)。
 
 ## 功能
