@@ -1,0 +1,1747 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#173c66">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>名片庫</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='6' width='28' height='20' rx='3' fill='%23173c66'/%3E%3Ccircle cx='11' cy='15' r='3.5' fill='%23f39043'/%3E%3Crect x='17' y='12' width='9' height='2' fill='%23fff'/%3E%3Crect x='17' y='17' width='7' height='2' fill='%23fff'/%3E%3C/svg%3E">
+<style>:root{--bg:#f3f4f6;--surface:#fbfcfd;--surface-2:#ffffff;--fg:#131415;--muted:#4d4e4f;--faint:#7c7d80;--line:#dfe1e5;
+  --accent:#173c66;--accent-2:#005a7f;--accent-soft:#e4eaf2;--orange:#f39043;--orange-ink:#b35a10;--ok:#006300;--ok-soft:#e3f1e3;--warn:#8a5a00;--warn-soft:#fdf1d8;--danger:#c62f2f;
+  --mark:#ffe58a;--mark-fg:#131415;--shadow:0 1px 2px rgba(15,20,36,.06),0 4px 14px rgba(15,20,36,.06);
+  --font:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;--mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0f1319;--surface:#161c24;--surface-2:#1b222c;--fg:#eef0f3;--muted:#b4b6ba;--faint:#888889;--line:#29313c;
+  --accent:#7fa6d6;--accent-2:#4fb3cf;--accent-soft:#1a2a40;--orange-ink:#f39043;--ok:#3cc23c;--ok-soft:#14261a;--warn:#e5b04a;--warn-soft:#2c2414;--danger:#ef6b6b;--mark:#6b5410;--mark-fg:#fff3c4;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25)}}
+:root[data-theme=dark]{--bg:#0f1319;--surface:#161c24;--surface-2:#1b222c;--fg:#eef0f3;--muted:#b4b6ba;--faint:#888889;--line:#29313c;
+  --accent:#7fa6d6;--accent-2:#4fb3cf;--accent-soft:#1a2a40;--orange-ink:#f39043;--ok:#3cc23c;--ok-soft:#14261a;--warn:#e5b04a;--warn-soft:#2c2414;--danger:#ef6b6b;--mark:#6b5410;--mark-fg:#fff3c4}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 var(--font);min-height:100vh}
+button,input,select,textarea{font:inherit;color:inherit}
+svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:8px 12px;cursor:pointer;white-space:nowrap;font-weight:600;font-size:14px}
+.btn:hover{border-color:var(--accent)}
+.btn:focus-visible,.chip:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent-2);outline-offset:1px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+:root[data-theme=dark] .btn.primary{color:#0f1319}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .btn.primary{color:#0f1319}}
+.btn.primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn.ghost{background:transparent;border-color:transparent}
+.btn.ghost:hover{background:var(--accent-soft)}
+.btn.danger{color:var(--danger)}
+.btn[disabled]{opacity:.5;cursor:default}
+.icon-btn{padding:8px}
+
+/* header */
+header.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top-in{max-width:1100px;margin:0 auto;padding:12px 16px 10px;display:grid;gap:10px}
+.brand-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px;margin-right:auto}
+.brand h1{margin:0;font-size:1.25rem;letter-spacing:.02em}
+.brand .count{color:var(--faint);font-size:.85rem}
+.search{position:relative;display:flex;align-items:center}
+.search>svg{position:absolute;left:12px;color:var(--faint);pointer-events:none}
+.search input::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none}
+.search input{width:100%;border:2px solid var(--line);background:var(--surface-2);border-radius:10px;padding:11px 84px 11px 40px;font-size:16px}
+.search input:focus{outline:none;border-color:var(--accent)}
+.search kbd,.search .clear{position:absolute;right:10px}
+kbd{font:12px var(--mono);border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:1px 6px;color:var(--faint);background:var(--surface)}
+.search .clear{border:0;background:none;cursor:pointer;color:var(--faint);padding:4px;display:none}
+.search.has-q .clear{display:flex}.search.has-q kbd{display:none}
+.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface-2)}
+.seg button{border:0;background:none;padding:5px 11px;cursor:pointer;font-size:13.5px;color:var(--muted)}
+.seg button[aria-pressed=true]{background:var(--accent);color:#fff;font-weight:600}
+:root[data-theme=dark] .seg button[aria-pressed=true]{color:#0f1319}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .seg button[aria-pressed=true]{color:#0f1319}}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:3px 10px;font-size:13px;cursor:pointer;color:var(--muted)}
+.chip[aria-pressed=true]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}
+.chip.warn[aria-pressed=true]{border-color:var(--warn);background:var(--warn-soft);color:var(--warn)}
+.result-info{margin-left:auto;font-size:13px;color:var(--faint)}
+.hint{font-size:12.5px;color:var(--faint)}
+.hint code{font:12px var(--mono);background:var(--accent-soft);color:var(--accent);padding:0 4px;border-radius:4px}
+
+/* list */
+main{max-width:1100px;margin:0 auto;padding:8px 44px 120px 16px;position:relative}
+.group{margin-top:14px}
+.group h2{position:sticky;top:var(--hdr,150px);z-index:5;margin:0 0 6px;font-size:.85rem;font-weight:700;color:var(--orange-ink);background:var(--bg);padding:4px 2px;letter-spacing:.04em;
+  border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:baseline}
+.group h2 small{color:var(--faint);font-weight:500}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px}
+.card{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;
+  cursor:pointer;text-align:left;width:100%;box-shadow:var(--shadow);transition:border-color .15s,transform .15s}
+.card:hover{border-color:var(--accent)}
+.card.sel{border-color:var(--accent-2);outline:2px solid var(--accent-2);outline-offset:-1px}
+.avatar{width:44px;height:44px;border-radius:8px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:700;font-size:18px;overflow:hidden}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.card .nm{font-weight:700;font-size:15.5px;line-height:1.3}
+.card .nm small{font-weight:500;color:var(--faint);margin-left:6px;font-size:12.5px}
+.card .sub{color:var(--muted);font-size:13.5px;line-height:1.35;margin-top:2px}
+.card>span:nth-child(2){min-width:0}
+.card .meta{color:var(--faint);font-size:12.5px;margin-top:4px;font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.tag{font-size:11.5px;background:var(--accent-soft);color:var(--accent);border-radius:4px;padding:0 6px}
+.tag.review{background:var(--warn-soft);color:var(--warn)}
+.star{color:var(--orange);font-size:15px}
+mark{background:var(--mark);color:var(--mark-fg);border-radius:2px;padding:0 1px}
+.empty{text-align:center;padding:60px 16px;color:var(--muted)}
+.empty h2{color:var(--fg);margin:12px 0 6px;font-size:1.15rem}
+.empty .actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.empty svg.big{width:64px;height:64px;color:var(--accent);stroke-width:1.5}
+
+/* index rail */
+.rail{position:fixed;right:max(4px,env(safe-area-inset-right));top:calc(var(--hdr,150px) + 8px);bottom:90px;z-index:15;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  gap:0;overflow:hidden;width:32px;touch-action:none;user-select:none;-webkit-user-select:none}
+.rail button{border:0;background:none;padding:1px 0;width:32px;font-size:11.5px;line-height:1.35;color:var(--accent);font-weight:700;cursor:pointer;border-radius:4px;overflow:hidden;white-space:nowrap;text-overflow:clip}
+.rail button:hover,.rail button.on{background:var(--accent);color:#fff}
+.rail-pop{position:fixed;right:52px;top:50%;transform:translateY(-50%);z-index:30;min-width:72px;padding:10px 16px;border-radius:12px;background:var(--accent);color:#fff;font-size:28px;font-weight:700;text-align:center;
+  pointer-events:none;opacity:0;transition:opacity .15s}
+.rail-pop.on{opacity:.95}
+
+/* dialogs */
+dialog{border:0;border-radius:14px;padding:0;background:var(--surface);color:var(--fg);box-shadow:0 20px 60px rgba(0,0,0,.35);width:min(960px,calc(100vw - 24px));max-height:calc(100vh - 24px)}
+dialog::backdrop{background:rgba(10,14,22,.5)}
+dialog.small{width:min(520px,calc(100vw - 24px))}
+dialog>form{display:flex;flex-direction:column;max-height:calc(100vh - 24px)}
+.dlg-body{flex:1;min-height:0}
+.dlg-head h2:focus{outline:none}
+.dlg-head{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface);z-index:2}
+.dlg-head h2{margin:0;font-size:1.1rem;margin-right:auto}
+.dlg-body{padding:16px 18px;overflow:auto}
+.dlg-foot{display:flex;gap:8px;justify-content:flex-end;align-items:center;padding:12px 18px;border-top:1px solid var(--line);position:sticky;bottom:0;background:var(--surface);flex-wrap:wrap}
+.dlg-foot .left{margin-right:auto;display:flex;gap:8px}
+.editor{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:18px}
+.shot{background:var(--bg);border:1px dashed var(--line);border-radius:10px;min-height:160px;display:grid;place-items:center;overflow:hidden;position:relative}
+.shot img{max-width:100%;max-height:340px;display:block;cursor:zoom-in}
+.shot .none{color:var(--faint);font-size:13px;padding:20px;text-align:center}
+.shot-tools{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+details.raw{margin-top:10px;font-size:13px}
+details.raw summary{cursor:pointer;color:var(--muted)}
+details.raw pre{white-space:pre-wrap;font:12.5px/1.5 var(--mono);background:var(--bg);border-radius:8px;padding:10px;max-height:220px;overflow:auto;margin:6px 0 0}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
+.form label{display:grid;gap:3px;font-size:12.5px;color:var(--muted);font-weight:600}
+.form label.wide{grid-column:1/-1}
+.form input,.form textarea,.form select,.set input,.set select{border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:8px 10px;font-size:15px;font-weight:400;width:100%}
+.form input:focus,.form textarea:focus,.set input:focus,.set select:focus{outline:none;border-color:var(--accent)}
+.form textarea{min-height:64px;resize:vertical}
+.form .ocr-hit{border-color:color-mix(in srgb,var(--ok) 55%,var(--line));background:color-mix(in srgb,var(--ok-soft) 60%,var(--surface-2))}
+.quick{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.quick a{font-size:13px;text-decoration:none;color:var(--accent);border:1px solid var(--line);border-radius:999px;padding:3px 10px;display:inline-flex;gap:4px;align-items:center}
+.quick a:hover{border-color:var(--accent)}
+.notice{font-size:13px;border-radius:8px;padding:8px 10px;background:var(--warn-soft);color:var(--warn);margin-bottom:10px}
+.notice.ok{background:var(--ok-soft);color:var(--ok)}
+.set{display:grid;gap:14px}
+.set fieldset{border:1px solid var(--line);border-radius:10px;padding:10px 14px 14px;margin:0;display:grid;gap:8px}
+.set legend{font-weight:700;padding:0 4px}
+.set .radio{display:flex;gap:8px;align-items:flex-start;font-size:14px}
+.set .radio input{width:auto;margin-top:4px}
+.set .radio small{display:block;color:var(--faint)}
+.set label.f{display:grid;gap:3px;font-size:13px;color:var(--muted);font-weight:600}
+.menu{position:relative}
+.menu-list{position:absolute;right:0;top:calc(100% + 6px);z-index:40;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:6px;min-width:210px;display:none}
+.menu.open .menu-list{display:grid}
+.menu-list button{border:0;background:none;text-align:left;padding:8px 10px;border-radius:6px;cursor:pointer;display:flex;gap:8px;align-items:center;font-size:14px}
+.menu-list button:hover{background:var(--accent-soft)}
+.menu-list hr{border:0;border-top:1px solid var(--line);margin:4px 0}
+
+/* scan queue & toast */
+.queue{position:fixed;left:16px;bottom:16px;z-index:25;width:min(360px,calc(100vw - 32px));display:grid;gap:6px}
+.job{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;box-shadow:var(--shadow);font-size:13px}
+.job .bar{height:4px;border-radius:2px;background:var(--line);margin-top:6px;overflow:hidden}
+.job .bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .2s}
+.job.err{border-color:var(--danger);color:var(--danger)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);z-index:50;background:var(--fg);color:var(--bg);padding:9px 16px;border-radius:8px;font-size:14px;opacity:0;transition:.2s;pointer-events:none;max-width:calc(100vw - 32px)}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.drop{position:fixed;inset:0;z-index:60;background:color-mix(in srgb,var(--accent) 30%,transparent);border:4px dashed var(--accent);display:none;place-items:center;font-size:1.4rem;font-weight:700;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.4)}
+body.dragging .drop{display:grid}
+.zoom{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.85);display:none;place-items:center;cursor:zoom-out}
+.zoom.on{display:grid}.zoom img{max-width:96vw;max-height:96vh}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+@media (max-width:720px){
+  .editor{grid-template-columns:1fr}
+  .form{grid-template-columns:1fr}
+  .cards{grid-template-columns:1fr}
+  main{padding-right:38px}
+  .brand h1{font-size:1.1rem}
+  .btn .lbl{display:none}
+  .btn.primary .lbl{display:inline}
+  .search kbd{display:none}
+  .toolbar .hint{display:none}
+  dialog{width:100vw;max-height:100vh;height:100%;border-radius:0;max-width:100vw}
+  dialog>form{max-height:100vh;height:100%}
+}
+@media print{header.top,.rail,.queue{display:none}main{padding:0}.card{break-inside:avoid;box-shadow:none}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-card" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.2"/><path d="M5.8 16c.6-1.6 1.8-2.4 3.2-2.4s2.6.8 3.2 2.4M15 10h3M15 13h3"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 20V9M7 14l5-5 5 5M5 4h14"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+  <symbol id="i-rotate" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></symbol>
+  <symbol id="i-scan" viewBox="0 0 24 24"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M7 12h10"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1z"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
+</svg>
+
+<header class="top" id="top">
+  <div class="top-in">
+    <div class="brand-row">
+      <div class="brand"><h1>名片庫</h1><span class="count" id="count"></span></div>
+      <button class="btn primary" id="btn-scan" type="button" title="拍照或選擇名片照片(可多選)"><svg class="i"><use href="#i-camera"/></svg><span class="lbl">掃描名片</span></button>
+      <button class="btn" id="btn-new" type="button" title="手動新增"><svg class="i"><use href="#i-card"/></svg><span class="lbl">手動新增</span></button>
+      <div class="menu" id="menu">
+        <button class="btn icon-btn" id="btn-menu" type="button" aria-haspopup="true" aria-expanded="false" aria-label="更多功能"><svg class="i"><use href="#i-more"/></svg></button>
+        <div class="menu-list" role="menu">
+          <button type="button" data-act="export-csv" role="menuitem"><svg class="i"><use href="#i-down"/></svg>匯出 Excel(CSV)</button>
+          <button type="button" data-act="export-vcf" role="menuitem"><svg class="i"><use href="#i-down"/></svg>匯出通訊錄(vCard)</button>
+          <button type="button" data-act="export-json" role="menuitem"><svg class="i"><use href="#i-down"/></svg>完整備份(JSON,含圖片)</button>
+          <button type="button" data-act="import" role="menuitem"><svg class="i"><use href="#i-up"/></svg>匯入(JSON / CSV / vCard)</button>
+          <hr>
+          <button type="button" data-act="settings" role="menuitem"><svg class="i"><use href="#i-gear"/></svg>設定與 OCR 引擎</button>
+        </div>
+      </div>
+    </div>
+    <div class="search" id="search-box">
+      <svg class="i"><use href="#i-search"/></svg>
+      <input id="q" type="search" autocomplete="off" enterkeyhint="search" placeholder="搜尋姓名、公司、職稱、電話末碼、Email…" aria-label="搜尋名片">
+      <kbd>/</kbd>
+      <button class="clear" type="button" id="q-clear" aria-label="清除搜尋"><svg class="i"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="索引方式" id="group-mode">
+        <button type="button" data-mode="name">姓名</button><button type="button" data-mode="company">公司</button><button type="button" data-mode="tag">標籤</button><button type="button" data-mode="month">建檔月份</button>
+      </div>
+      <div class="chips" id="chips"></div>
+      <span class="result-info" id="result-info"></span>
+    </div>
+    <div class="hint">進階搜尋:<code>公司:鑫科</code> <code>#客戶</code> <code>電話:5678</code> <code>-離職</code> <code>"sales manager"</code> · 方向鍵選擇、Enter 開啟</div>
+  </div>
+</header>
+
+<main id="main" aria-live="polite"></main>
+<nav class="rail" id="rail" aria-label="快速索引"></nav>
+<div class="rail-pop" id="rail-pop" aria-hidden="true"></div>
+<div class="queue" id="queue" aria-live="polite"></div>
+<div class="toast" id="toast" role="status"></div>
+<div class="drop" id="drop">放開以辨識名片</div>
+<div class="zoom" id="zoom"><img alt="名片放大"></div>
+<input type="file" id="file-scan" accept="image/*" multiple hidden>
+<input type="file" id="file-import" accept=".json,.csv,.vcf,application/json,text/csv,text/vcard" hidden>
+
+<dialog id="dlg-edit" aria-labelledby="edit-title">
+  <form method="dialog" id="edit-form">
+    <div class="dlg-head"><h2 id="edit-title" tabindex="-1" autofocus>名片</h2>
+      <button type="button" class="btn ghost" id="edit-fav" aria-pressed="false" title="加星號">☆</button>
+      <button type="button" class="btn ghost icon-btn" data-close aria-label="關閉"><svg class="i"><use href="#i-x"/></svg></button></div>
+    <div class="dlg-body">
+      <div id="edit-notice"></div>
+      <div class="editor">
+        <div>
+          <div class="shot" id="edit-shot"><div class="none">沒有名片圖片</div></div>
+          <div class="shot-tools">
+            <button type="button" class="btn" id="edit-rotate"><svg class="i"><use href="#i-rotate"/></svg>旋轉</button>
+            <button type="button" class="btn" id="edit-reocr"><svg class="i"><use href="#i-scan"/></svg>重新辨識</button>
+            <button type="button" class="btn" id="edit-photo"><svg class="i"><use href="#i-camera"/></svg>換照片</button>
+          </div>
+          <details class="raw" id="edit-raw-wrap"><summary>辨識原文</summary><pre id="edit-raw"></pre></details>
+          <div class="quick" id="edit-quick"></div>
+        </div>
+        <div class="form" id="edit-fields">
+          <label>姓名<input name="name" autocomplete="off"></label>
+          <label>英文姓名<input name="nameEn" autocomplete="off"></label>
+          <label class="wide">公司<input name="company" autocomplete="off" list="dl-company"></label>
+          <label class="wide">公司英文名<input name="companyEn" autocomplete="off"></label>
+          <label>部門<input name="department" autocomplete="off"></label>
+          <label>職稱<input name="title" autocomplete="off"></label>
+          <label>手機<input name="mobile" inputmode="tel" autocomplete="off"></label>
+          <label>電話<input name="tel" inputmode="tel" autocomplete="off"></label>
+          <label>傳真<input name="fax" inputmode="tel" autocomplete="off"></label>
+          <label>Email<input name="email" inputmode="email" autocomplete="off"></label>
+          <label>網站<input name="website" inputmode="url" autocomplete="off"></label>
+          <label>統一編號<input name="taxId" inputmode="numeric" autocomplete="off"></label>
+          <label>LINE ID<input name="lineId" autocomplete="off"></label>
+          <label class="wide">地址<input name="address" autocomplete="off"></label>
+          <label class="wide">標籤(以逗號分隔,例如:客戶, 供應商, 2026 展覽)<input name="tags" autocomplete="off" list="dl-tags"></label>
+          <label class="wide">備註(認識場合、簡稱、待辦…)<textarea name="notes"></textarea></label>
+        </div>
+      </div>
+    </div>
+    <div class="dlg-foot">
+      <div class="left"><button type="button" class="btn danger" id="edit-delete"><svg class="i"><use href="#i-trash"/></svg>刪除</button>
+        <button type="button" class="btn" id="edit-vcf"><svg class="i"><use href="#i-down"/></svg>vCard</button></div>
+      <button type="button" class="btn" data-close>取消</button>
+      <button type="submit" class="btn primary" id="edit-save" value="save">儲存</button>
+    </div>
+  </form>
+</dialog>
+<datalist id="dl-company"></datalist><datalist id="dl-tags"></datalist>
+
+<dialog id="dlg-settings" class="small" aria-labelledby="set-title">
+  <form method="dialog" class="set-form">
+    <div class="dlg-head"><h2 id="set-title" tabindex="-1" autofocus>設定</h2><button type="button" class="btn ghost icon-btn" data-close aria-label="關閉"><svg class="i"><use href="#i-x"/></svg></button></div>
+    <div class="dlg-body set">
+      <fieldset><legend>OCR 引擎</legend>
+        <label class="radio"><input type="radio" name="engine" value="tesseract"><span>本機辨識(Tesseract)<small>免費、照片不離開裝置。第一次使用需下載約 20 MB 語言檔;對手寫、藝術字、彎曲或反光的名片較弱。</small></span></label>
+        <label class="radio"><input type="radio" name="engine" value="claude"><span>Claude 視覺辨識<small>準確度高,直接判斷欄位;照片會傳送到 Anthropic API,依用量計費,需要自己的 API 金鑰。</small></span></label>
+      </fieldset>
+      <fieldset><legend>本機辨識語言</legend>
+        <select name="langs" aria-label="辨識語言">
+          <option value="chi_tra">繁體中文(含英數字,建議)</option><option value="chi_tra+eng">繁體中文 + 英文模型(英文為主的名片)</option>
+          <option value="chi_sim">簡體中文(含英數字)</option>
+          <option value="jpn+eng">日文 + 英文</option><option value="kor+eng">韓文 + 英文</option><option value="eng">英文</option>
+        </select>
+      </fieldset>
+      <fieldset><legend>Claude</legend>
+        <label class="f">Anthropic API 金鑰<input name="apiKey" type="password" autocomplete="off" placeholder="sk-ant-…"></label>
+        <label class="f">模型<select name="model">
+          <option value="claude-opus-5-5">Claude Opus 5.5(最準確,預設)</option>
+          <option value="claude-sonnet-5-5">Claude Sonnet 5.5(較快、較省)</option>
+          <option value="claude-haiku-5-5">Claude Haiku 5.5(最省,大量建檔)</option>
+        </select></label>
+        <div class="hint">金鑰只存在這台裝置的瀏覽器,呼叫時直接傳給 api.anthropic.com。建議在 Anthropic Console 為這個用途建立專用金鑰並設定花費上限;共用電腦請勿儲存。</div>
+      </fieldset>
+      <fieldset><legend>資料</legend>
+        <div class="hint" id="set-storage"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" class="btn" id="set-persist">要求永久保存</button>
+          <button type="button" class="btn" id="set-demo">載入示範名片</button>
+          <button type="button" class="btn danger" id="set-clear">清除全部名片</button>
+        </div>
+      </fieldset>
+    </div>
+    <div class="dlg-foot"><button type="button" class="btn" data-close>取消</button><button type="submit" class="btn primary" value="save">儲存設定</button></div>
+  </form>
+</dialog>
+
+<script>/* ---- parser.js ---- */
+/* 名片文字解析:把 OCR 出來的純文字拆成姓名、公司、職稱、電話、Email、地址等欄位。
+ * 純函式、不碰 DOM,瀏覽器與 Node(測試)共用。 */
+(function (root) {
+  'use strict';
+
+  const FIELDS = ['name', 'nameEn', 'company', 'department', 'title', 'mobile', 'tel', 'fax',
+    'email', 'website', 'address', 'taxId', 'lineId'];
+
+  // 全形英數與符號轉半形,統一各種破折號、冒號
+  function toHalfWidth(s) {
+    return String(s || '')
+      .replace(/[！-～]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+      .replace(/　/g, ' ')
+      .replace(/[‐‑‒–—―﹣－]/g, '-')
+      .replace(/[：﹕]/g, ':');
+  }
+
+  const CJK = '\\u3400-\\u9fff\\uf900-\\ufaff';
+  const reCJK = new RegExp('[' + CJK + ']');
+  const reCJKOnly = new RegExp('^[' + CJK + '·・]+$');
+
+  const COMPANY_RE = /(股份有限公司|有限公司|公司|企業社|集團|事務所|工作室|研究院|研究所|基金會|協會|銀行|醫院|大學|工業|實業|科技|貿易|商行|株式会社|株式會社|\b(inc|corp|corporation|co|company|ltd|limited|llc|gmbh|plc|pte|s\.a|ag|group|technologies|technology|industries)\b\.?)/i;
+  const TITLE_WORDS = ['董事長', '副董事長', '總裁', '執行長', '總經理', '副總經理', '副總', '協理', '經理', '副理', '襄理', '處長', '副處長',
+    '廠長', '課長', '科長', '組長', '主任', '主管', '專員', '工程師', '研究員', '技術員', '業務代表', '業務', '總監', '特助', '秘書', '顧問',
+    '會計師', '律師', '醫師', '教授', '助理', '店長', '負責人', '創辦人', '合夥人', '部長', '董事', '監事', '代表', '設計師', '採購'];
+  const TITLE_RE = new RegExp('(' + TITLE_WORDS.join('|') + ')|\\b(ceo|cto|cfo|coo|cio|vp|svp|evp|president|vice president|director|manager|engineer|' +
+    'sales|specialist|consultant|assistant|founder|co-founder|partner|owner|officer|representative|executive|supervisor|lead|head of|analyst|designer|buyer)\\b', 'i');
+  const DEPT_RE = /([^\s]{1,12}(部|處|課|室|組|中心|事業群|事業部|實驗室))|\b(dept\.?|department|division|r&d|sales dept)\b/i;
+  const ADDR_RE = /(縣|市|區|鄉|鎮|路|街|大道|巷|弄|段|號|樓|省)/;
+  const ADDR_EN_RE = /\b(rd|road|st|street|ave|avenue|blvd|boulevard|lane|ln|alley|sec\.?|section|no\.|floor|fl\.?|suite|ste|bldg|building|dist\.?|district|city|county|taiwan|r\.o\.c|china|japan|usa)\b/i;
+  const EMAIL_RE = /[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}/;
+  const URL_RE = /((https?:\/\/)?(www\.)?[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.(com|net|org|tw|cn|jp|kr|io|co|biz|info|edu|gov|hk|sg|de|uk|us)(\.[a-z]{2})?(\/[^\s]*)?)/i;
+  const PHONE_RE = /(\+?\(?\d[\d\s\-().\/]{5,}\d)(\s*(#|ext\.?|轉|分機|x)\s*\d{1,6})?/i;
+
+  // 長標籤冒號可省略;單一字母標籤(T、F、M、A…)必須接冒號,避免把「ACME」的 A 當成地址標籤
+  const label = (long, short) => new RegExp('^(?:(?:' + long + ')\\s*[:.]?' + (short ? '|(?:' + short + ')\\s*[:.]' : '') + ')\\s*', 'i');
+  const LABELS = {
+    mobile: label('手機|行動電話|行動|mobile|mob|cell|cellphone', 'm'),
+    fax: label('傳真|fax', 'f'),
+    tel: label('電話|市話|公司電話|總機|專線|tel|telephone|phone|office', 't|o|p'),
+    email: label('e-?mail|電子郵件|信箱|郵件', 'e'),
+    website: label('網址|網站|website|web|url', 'w'),
+    address: label('地址|公司地址|住址|address|addr|add', 'a'),
+    taxId: label('統一編號|統編|tax\\s*id|vat'),
+    lineId: label('line\\s*id|line'),
+  };
+
+  function cleanPhone(s) {
+    return s.replace(/[^\d+#()\- ]/g, '').replace(/\s+/g, ' ').replace(/\s*-\s*/g, '-').trim();
+  }
+  function phoneDigits(s) { return String(s || '').replace(/\D/g, ''); }
+  function isMobile(p) {
+    const d = phoneDigits(p);
+    const intl = /^\s*(\+|00)/.test(p);
+    return (!intl && (/^09\d{8}$/.test(d) || /^1[3-9]\d{9}$/.test(d))) || /^(00)?8869\d{8}$/.test(d) || /^(00)?861[3-9]\d{9}$/.test(d);
+  }
+  function addTo(fields, key, value) {
+    value = String(value || '').trim();
+    if (!value) return;
+    const parts = fields[key] ? fields[key].split(' / ') : [];
+    if (!parts.includes(value)) parts.push(value);
+    fields[key] = parts.join(' / ');
+  }
+
+  // 一行裡可能同時有「T: 02-1234 F: 02-5678」:依標籤切段
+  function splitLabeled(line) {
+    const re = /(手機|行動電話|電話|傳真|分機|統一編號|統編|E-?mail|Mobile|Mob|Cell|Tel|Phone|Fax|Office|\bT\b|\bF\b|\bM\b|\bO\b)\s*[:.]/gi;
+    const idx = [];
+    let m;
+    while ((m = re.exec(line))) idx.push(m.index);
+    if (idx.length < 2) return [line];
+    if (idx[0] > 0) idx.unshift(0);
+    return idx.map((s, i) => line.slice(s, idx[i + 1]).trim()).filter(Boolean);
+  }
+
+  function looksLikeName(line) {
+    const compact = line.replace(/\s+/g, '');
+    if (reCJKOnly.test(compact) && compact.length >= 2 && compact.length <= 4) return !COMPANY_RE.test(compact) && !TITLE_RE.test(compact) && !ADDR_RE.test(compact) && !DEPT_RE.test(compact);
+    return false;
+  }
+  function looksLikeEnglishName(line) {
+    const t = line.trim();
+    if (!/^[A-Za-z][A-Za-z.'\- ,]{2,40}$/.test(t)) return false;
+    if (COMPANY_RE.test(t) || TITLE_RE.test(t) || ADDR_EN_RE.test(t)) return false;
+    const words = t.replace(/,/g, ' ').split(/\s+/).filter(Boolean);
+    return words.length >= 2 && words.length <= 4 && words.every(w => /^[A-Z]/.test(w) || /^[a-z]{1,3}$/.test(w));
+  }
+
+  /** 解析名片文字。回傳 {fields, unmatched}:fields 是各欄位字串,unmatched 是沒歸類的行。 */
+  function parseCardText(text) {
+    const fields = {};
+    const unmatched = [];
+    // OCR 常在中文字之間插入空白(「股 份 有 限 公 司」):整行多半是單字時才去掉中文字之間的空白,
+    // 「王大明 業務經理」這種刻意分隔的不動
+    const spacedOut = l => {
+      const toks = l.split(' ').filter(t => reCJK.test(t));
+      return toks.length >= 2 && toks.filter(t => t.length === 1).length / toks.length >= 0.7;
+    };
+    const joinCJK = new RegExp('([' + CJK + '])\\s+(?=[' + CJK + '])', 'g');
+    // 左右分欄的名片:OCR 保留的大段空白(3 格以上)視為欄位分隔,拆成獨立的行
+    const lines = toHalfWidth(text).split(/\r?\n|[ \t]{3,}/)
+      .map(l => l.replace(/[|¦]/g, ' ').replace(/\s+/g, ' ').trim())
+      .map(l => (spacedOut(l) ? l.replace(joinCJK, '$1') : l))
+      .filter(l => l.length > 1);
+    const pending = []; // 先處理有明確格式的,剩下的再判斷姓名/公司/職稱
+
+    for (const raw of lines) {
+      for (let seg of splitLabeled(raw)) {
+        let handled = false;
+        // Email(OCR 常在 @ 兩側多出空白)
+        const emailSeg = seg.replace(/\s*@\s*/g, '@').replace(/\s*\.\s*(?=[a-z]{2,}\b)/gi, '.');
+        const em = emailSeg.match(EMAIL_RE);
+        if (em) { addTo(fields, 'email', em[0].toLowerCase()); seg = emailSeg.replace(em[0], '').replace(LABELS.email, '').trim(); handled = !seg || seg.length < 3; if (handled) continue; }
+
+        if (LABELS.taxId.test(seg)) { const d = seg.match(/\d{8}/); if (d) { fields.taxId = d[0]; continue; } }
+        if (LABELS.lineId.test(seg)) { addTo(fields, 'lineId', seg.replace(LABELS.lineId, '')); continue; }
+
+        let label = null;
+        for (const k of ['mobile', 'fax', 'tel']) if (LABELS[k].test(seg)) { label = k; break; }
+        const body = label ? seg.replace(LABELS[label], '') : seg;
+        const ph = body.match(PHONE_RE);
+        const digits = ph ? phoneDigits(ph[1]) : '';
+        if (ph && digits.length >= 7 && digits.length <= 15 && (label || ph[0].length >= body.replace(/\s/g, '').length * 0.6)) {
+          const num = cleanPhone(ph[1]) + (ph[2] ? ' #' + phoneDigits(ph[2]) : '');
+          addTo(fields, label || (isMobile(num) ? 'mobile' : 'tel'), num);
+          continue;
+        }
+
+        if (LABELS.website.test(seg) || (!reCJK.test(seg) && URL_RE.test(seg) && !/\s/.test(seg.replace(LABELS.website, '').trim()))) {
+          const u = seg.replace(LABELS.website, '').match(URL_RE);
+          if (u) { addTo(fields, 'website', u[0].replace(/[),;]+$/, '')); continue; }
+        }
+
+        if (LABELS.address.test(seg)) { addTo(fields, 'address', seg.replace(LABELS.address, '')); continue; }
+        const hasDigit = /\d/.test(seg);
+        if (hasDigit && reCJK.test(seg) && (seg.match(new RegExp(ADDR_RE.source, 'g')) || []).length >= 2 && !COMPANY_RE.test(seg.replace(/\d.*$/, ''))) { addTo(fields, 'address', seg); continue; }
+        const enHits = hasDigit && !reCJK.test(seg) ? (seg.match(new RegExp(ADDR_EN_RE.source, 'gi')) || []).length : 0;
+        if (enHits >= 2 || (enHits === 1 && /^\s*(no\.?\s*)?\d/i.test(seg))) { addTo(fields, 'address', seg); continue; }
+        pending.push(seg);
+      }
+    }
+
+    for (const seg of pending) {
+      const compact = seg.replace(/\s+/g, '');
+      if (COMPANY_RE.test(seg) && !(TITLE_RE.test(seg) && seg.length <= 8)) {
+        // 公司名常帶英文名,中文優先
+        if (!fields.company || (!reCJK.test(fields.company) && reCJK.test(seg))) fields.company = fields.company && !reCJK.test(seg) ? fields.company : seg;
+        else if (!fields.companyEn && !reCJK.test(seg)) fields.companyEn = seg;
+        else unmatched.push(seg);
+        continue;
+      }
+      // 「王大明 業務經理」:姓名與職稱同一行
+      const nt = seg.match(new RegExp('^([' + CJK + ']{2,4})\\s+(.+)$'));
+      if (nt && !fields.name && looksLikeName(nt[1]) && TITLE_RE.test(nt[2])) { fields.name = nt[1]; fields.title = nt[2]; continue; }
+      if (!fields.name && looksLikeName(seg)) { fields.name = compact; continue; }
+      if (/^[^\s]{1,12}(部|處|課|室|組|中心|事業群|事業部|實驗室)$/.test(compact) && !fields.department) { fields.department = compact; continue; }
+      if (TITLE_RE.test(seg) && seg.length <= 40) {
+        const dm = seg.match(DEPT_RE);
+        if (dm && !fields.department && dm[0].length < seg.length) {
+          fields.department = dm[0].trim();
+          const rest = seg.replace(dm[0], '').trim();
+          if (rest) addTo(fields, 'title', rest);
+        } else addTo(fields, 'title', seg);
+        continue;
+      }
+      if (DEPT_RE.test(seg) && seg.length <= 24 && !fields.department) { fields.department = seg; continue; }
+      if (!fields.nameEn && looksLikeEnglishName(seg)) { fields.nameEn = seg; continue; }
+      unmatched.push(seg);
+    }
+
+    // 沒抓到中文姓名時,用英文名
+    if (!fields.name && fields.nameEn) { fields.name = fields.nameEn; delete fields.nameEn; }
+    if (!fields.company && fields.companyEn) { fields.company = fields.companyEn; delete fields.companyEn; }
+    // 沒公司名但有 Email 網域:用網域當線索
+    if (!fields.company && fields.email && !/(gmail|yahoo|hotmail|outlook|icloud|msn|qq|163|126|hinet)\./i.test(fields.email)) {
+      fields.companyHint = fields.email.split('@')[1].split('.')[0];
+    }
+    return { fields, unmatched };
+  }
+
+  const api = { parseCardText, toHalfWidth, phoneDigits, isMobile, FIELDS };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.CardParser = api;
+})(typeof self !== 'undefined' ? self : this);
+
+/* ---- search.js ---- */
+/* 名片快速索引:記憶體中的倒排索引(中文 1/2-gram、英文前綴、電話數字子字串),
+ * 先以索引挑出候選,再逐欄驗證、加權排序。瀏覽器與 Node(測試)共用。 */
+(function (root) {
+  'use strict';
+
+  const WEIGHTS = { name: 10, nameEn: 8, company: 6, companyEn: 5, tags: 5, email: 4, mobile: 4, tel: 3, title: 3, department: 3,
+    taxId: 3, lineId: 2, website: 2, address: 2, fax: 1, notes: 1, rawText: 0.3 };
+  const PHONE_FIELDS = ['mobile', 'tel', 'fax'];
+
+  // 查詢語法的欄位別名:company:台積、公司:台積、#客戶(標籤)
+  const ALIASES = {
+    name: ['name', 'n', '姓名', '名字'], company: ['company', 'c', 'co', '公司'], title: ['title', 't', '職稱'],
+    department: ['dept', 'department', '部門'], tags: ['tag', 'tags', '標籤'], email: ['email', 'mail', 'e', '信箱'],
+    phone: ['phone', 'tel', 'p', '電話', '手機'], address: ['addr', 'address', 'a', '地址'], notes: ['note', 'notes', '備註'],
+  };
+  const ALIAS_MAP = {};
+  for (const [k, list] of Object.entries(ALIASES)) for (const a of list) ALIAS_MAP[a] = k;
+
+  const reCJK = /[㐀-鿿豈-﫿]/;
+  const collator = new Intl.Collator('zh-Hant-TW', { numeric: true, sensitivity: 'base' });
+
+  function norm(s) {
+    return String(s == null ? '' : s).normalize('NFKC').toLowerCase().replace(/\s+/g, ' ').trim();
+  }
+  const digitsOf = s => String(s || '').replace(/\D/g, '');
+
+  function fieldText(card, f) {
+    const v = card[f];
+    return Array.isArray(v) ? v.join(' ') : v;
+  }
+
+  /** 把一段文字切成索引用的 token */
+  function tokenize(text, out) {
+    const t = norm(text);
+    // 中文:單字與相鄰兩字
+    const cjkRuns = t.match(/[㐀-鿿豈-﫿]+/g) || [];
+    for (const run of cjkRuns) {
+      for (let i = 0; i < run.length; i++) {
+        out.add(run[i]);
+        if (i + 1 < run.length) out.add(run.slice(i, i + 2));
+      }
+    }
+    // 英數字:每個字的前綴(最多 12 字元)
+    const words = t.match(/[a-z0-9][a-z0-9'&+]*/g) || [];
+    for (const w of words) for (let i = 1; i <= Math.min(w.length, 12); i++) out.add('w:' + w.slice(0, i));
+    return out;
+  }
+
+  /** 查詢字詞 → 必須都出現的 token(用來從索引取候選) */
+  function queryTokens(term) {
+    const t = norm(term);
+    const toks = [];
+    const cjkRuns = t.match(/[㐀-鿿豈-﫿]+/g) || [];
+    for (const run of cjkRuns) {
+      if (run.length === 1) toks.push(run);
+      for (let i = 0; i + 1 < run.length; i++) toks.push(run.slice(i, i + 2));
+    }
+    const words = t.match(/[a-z0-9][a-z0-9'&+]*/g) || [];
+    for (const w of words) toks.push('w:' + w.slice(0, 12));
+    return toks;
+  }
+
+  function parseQuery(q) {
+    const terms = [];
+    const re = /(-?)(?:([^\s:"]+):)?(?:"([^"]+)"|(\S+))/g;
+    let m;
+    while ((m = re.exec(String(q || '')))) {
+      let field = m[2] ? ALIAS_MAP[m[2].toLowerCase()] : null;
+      let text = m[3] || m[4] || '';
+      if (m[2] && !field) text = m[2] + ':' + text; // 不認得的前綴當一般文字(例如網址)
+      if (!field && text.startsWith('#') && text.length > 1) { field = 'tags'; text = text.slice(1); }
+      if (!text) continue;
+      terms.push({ field, text, negate: m[1] === '-', norm: norm(text), digits: /^[\d\s\-+()]{3,}$/.test(text) ? digitsOf(text) : '' });
+    }
+    return terms;
+  }
+
+  class CardIndex {
+    constructor(cards) {
+      this.postings = new Map(); // token → Set(id)
+      this.docs = new Map();     // id → {card, f: {field: normalized}, phones: 'digits digits'}
+      if (cards) for (const c of cards) this.add(c);
+    }
+    get size() { return this.docs.size; }
+
+    add(card) {
+      if (this.docs.has(card.id)) this.remove(card.id);
+      const f = {};
+      const toks = new Set();
+      for (const k of Object.keys(WEIGHTS)) {
+        const v = fieldText(card, k);
+        if (!v) continue;
+        f[k] = norm(v);
+        tokenize(v, toks);
+      }
+      const phones = PHONE_FIELDS.map(k => String(card[k] || '').split('/').map(digitsOf).filter(Boolean).join(' ')).filter(Boolean).join(' ');
+      // 電話:所有長度 ≥3 的數字子字串都進索引,輸入末幾碼也找得到
+      for (const d of phones.split(' ')) {
+        for (let i = 0; i < d.length; i++) for (let j = i + 3; j <= d.length; j++) toks.add('d:' + d.slice(i, j));
+      }
+      for (const t of toks) {
+        let s = this.postings.get(t);
+        if (!s) this.postings.set(t, (s = new Set()));
+        s.add(card.id);
+      }
+      this.docs.set(card.id, { card, f, phones, toks });
+    }
+
+    remove(id) {
+      const d = this.docs.get(id);
+      if (!d) return;
+      for (const t of d.toks) {
+        const s = this.postings.get(t);
+        if (s) { s.delete(id); if (!s.size) this.postings.delete(t); }
+      }
+      this.docs.delete(id);
+    }
+
+    candidates(term) {
+      if (term.digits.length >= 3) { // 電話數字 ∪ 其他欄位的數字(統編、地址)
+        const a = this.postings.get('d:' + term.digits) || new Set();
+        const b = this._textCandidates(term);
+        return a.size ? (b.size ? new Set([...a, ...b]) : a) : b;
+      }
+      const toks = queryTokens(term.text);
+      if (!toks.length) return null; // 沒有可索引的字元(例如純符號):全部候選,交給驗證
+      let best = null;
+      for (const t of toks) {
+        const s = this.postings.get(t);
+        if (!s) return new Set();
+        if (!best || s.size < best.size) best = s;
+      }
+      return best;
+    }
+    _textCandidates(term) { // 數字查詢在電話找不到時,仍可能出現在統編、地址
+      const toks = queryTokens(term.text);
+      let best = null;
+      for (const t of toks) { const s = this.postings.get(t); if (!s) return new Set(); if (!best || s.size < best.size) best = s; }
+      return best || new Set();
+    }
+
+    scoreTerm(doc, term) {
+      let score = 0;
+      const fields = term.field === 'phone' ? PHONE_FIELDS : term.field ? [term.field] : Object.keys(WEIGHTS);
+      for (const k of fields) {
+        const v = doc.f[k];
+        if (!v) continue;
+        const i = v.indexOf(term.norm);
+        if (i < 0) continue;
+        let s = WEIGHTS[k];
+        if (v === term.norm) s *= 3;
+        else if (i === 0 || v[i - 1] === ' ' || v[i - 1] === '/') s *= 2;
+        score += s;
+      }
+      if (term.digits && (!term.field || term.field === 'phone') && doc.phones.includes(term.digits)) {
+        score += doc.phones.split(' ').some(p => p.endsWith(term.digits)) ? 8 : 4;
+      }
+      return score;
+    }
+
+    /** 搜尋;回傳依分數排序的 [{card, score}]。空查詢回傳全部。 */
+    search(query, { limit = Infinity } = {}) {
+      const terms = parseQuery(query);
+      const pos = terms.filter(t => !t.negate);
+      const neg = terms.filter(t => t.negate);
+      let ids;
+      if (!pos.length) ids = [...this.docs.keys()];
+      else {
+        const sets = pos.map(t => this.candidates(t));
+        const known = sets.filter(Boolean).sort((a, b) => a.size - b.size);
+        ids = known.length ? [...known[0]].filter(id => known.every(s => s.has(id))) : [...this.docs.keys()];
+      }
+      const out = [];
+      for (const id of ids) {
+        const doc = this.docs.get(id);
+        let total = 0, ok = true;
+        for (const t of pos) {
+          const s = this.scoreTerm(doc, t);
+          if (!s) { ok = false; break; }
+          total += s;
+        }
+        if (!ok) continue;
+        if (neg.some(t => this.scoreTerm(doc, t) > 0)) continue;
+        if (doc.card.favorite) total += 0.5;
+        out.push({ card: doc.card, score: total });
+      }
+      out.sort((a, b) => b.score - a.score || compareCards(a.card, b.card));
+      return limit < out.length ? out.slice(0, limit) : out;
+    }
+  }
+
+  function compareCards(a, b) {
+    return collator.compare(a.name || a.company || '', b.name || b.company || '');
+  }
+
+  /** 快速索引分組:姓名首字(英文依字母)、公司、標籤、建立月份 */
+  function groupKeys(card, mode) {
+    if (mode === 'company') return [card.company || '(未填公司)'];
+    if (mode === 'tag') return card.tags && card.tags.length ? card.tags : ['(無標籤)'];
+    if (mode === 'month') return [card.createdAt ? new Date(card.createdAt).toISOString().slice(0, 7) : '(未知)'];
+    const ch = (card.name || card.company || '').trim().charAt(0);
+    if (!ch) return ['#'];
+    if (/[a-z]/i.test(ch)) return [ch.toUpperCase()];
+    if (reCJK.test(ch)) return [ch];
+    return ['#'];
+  }
+
+  function groupCards(cards, mode) {
+    const groups = new Map();
+    for (const c of cards) for (const k of groupKeys(c, mode)) {
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(c);
+    }
+    const keys = [...groups.keys()].sort((a, b) => {
+      if (mode === 'month') return b.localeCompare(a);
+      const ra = a.startsWith('(') || a === '#' ? 2 : /^[a-z]/i.test(a) ? 0 : 1;
+      const rb = b.startsWith('(') || b === '#' ? 2 : /^[a-z]/i.test(b) ? 0 : 1;
+      return ra - rb || collator.compare(a, b);
+    });
+    return keys.map(k => ({ key: k, cards: groups.get(k).sort(compareCards) }));
+  }
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  /** 以 <mark> 標出查詢字詞(不分大小寫、全半形) */
+  function highlight(text, query) {
+    const s = String(text == null ? '' : text);
+    const terms = (Array.isArray(query) ? query : parseQuery(query)).filter(t => !t.negate && t.text);
+    if (!terms.length || !s) return escapeHtml(s);
+    const n = s.normalize('NFKC').toLowerCase();
+    const marks = new Array(s.length).fill(false);
+    const sameLen = n.length === s.length;
+    for (const t of terms) {
+      if (!sameLen) break;
+      let i = n.indexOf(t.norm);
+      while (i >= 0 && t.norm) { for (let k = i; k < i + t.norm.length; k++) marks[k] = true; i = n.indexOf(t.norm, i + 1); }
+      if (t.digits && /\d/.test(s)) { // 電話:忽略分隔符號比對數字
+        const pos = [];
+        for (let k = 0; k < s.length; k++) if (/\d/.test(s[k])) pos.push(k);
+        const ds = pos.map(k => s[k]).join('');
+        let j = ds.indexOf(t.digits);
+        while (j >= 0) { for (let k = pos[j]; k <= pos[j + t.digits.length - 1]; k++) marks[k] = true; j = ds.indexOf(t.digits, j + 1); }
+      }
+    }
+    let out = '', open = false;
+    for (let k = 0; k < s.length; k++) {
+      if (marks[k] && !open) { out += '<mark>'; open = true; }
+      if (!marks[k] && open) { out += '</mark>'; open = false; }
+      out += escapeHtml(s[k]);
+    }
+    return out + (open ? '</mark>' : '');
+  }
+
+  const api = { CardIndex, parseQuery, groupCards, groupKeys, highlight, escapeHtml, compareCards, norm };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.CardSearch = api;
+})(typeof self !== 'undefined' ? self : this);
+
+/* ---- store.js ---- */
+/* 名片資料庫:瀏覽器 IndexedDB。名片資料(cards)與圖片(images,Blob)分開存,清單載入不必讀圖。
+ * 資料只存在這台裝置的這個瀏覽器;換裝置請用「匯出 → 備份 JSON」再匯入。 */
+(function (root) {
+  'use strict';
+  const DB_NAME = 'card-scanner', VERSION = 1;
+  let dbp = null;
+
+  function open() {
+    if (dbp) return dbp;
+    dbp = new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, VERSION);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains('cards')) {
+          const s = db.createObjectStore('cards', { keyPath: 'id' });
+          s.createIndex('updatedAt', 'updatedAt');
+          s.createIndex('company', 'company');
+        }
+        if (!db.objectStoreNames.contains('images')) db.createObjectStore('images');
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+      req.onblocked = () => reject(new Error('資料庫被其他分頁占用,請關閉其他分頁後重新整理'));
+    });
+    return dbp;
+  }
+
+  function tx(stores, mode, fn) {
+    return open().then(db => new Promise((resolve, reject) => {
+      const t = db.transaction(stores, mode);
+      let result;
+      Promise.resolve(fn(t)).then(r => { result = r; }, reject);
+      t.oncomplete = () => resolve(result);
+      t.onerror = () => reject(t.error);
+      t.onabort = () => reject(t.error || new Error('交易中止'));
+    }));
+  }
+  const req2p = r => new Promise((resolve, reject) => { r.onsuccess = () => resolve(r.result); r.onerror = () => reject(r.error); });
+
+  function newId() {
+    return (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+  }
+
+  const Store = {
+    newId,
+    allCards: () => tx(['cards'], 'readonly', t => req2p(t.objectStore('cards').getAll())),
+    getCard: id => tx(['cards'], 'readonly', t => req2p(t.objectStore('cards').get(id))),
+    /** 新增或更新名片;image(Blob)有給才寫入圖片 */
+    saveCard(card, image) {
+      const now = Date.now();
+      card.id = card.id || newId();
+      card.createdAt = card.createdAt || now;
+      card.updatedAt = now;
+      card.hasImage = card.hasImage || !!image;
+      return tx(['cards', 'images'], 'readwrite', t => {
+        t.objectStore('cards').put(card);
+        if (image) t.objectStore('images').put(image, card.id);
+        return card;
+      });
+    },
+    putMany(cards, images) { // 匯入用:保留原本的時間戳
+      return tx(['cards', 'images'], 'readwrite', t => {
+        const s = t.objectStore('cards'), im = t.objectStore('images');
+        for (const c of cards) {
+          s.put(c);
+          if (images && images.has(c.id)) im.put(images.get(c.id), c.id);
+        }
+        return cards.length;
+      });
+    },
+    deleteCard: id => tx(['cards', 'images'], 'readwrite', t => { t.objectStore('cards').delete(id); t.objectStore('images').delete(id); }),
+    getImage: id => tx(['images'], 'readonly', t => req2p(t.objectStore('images').get(id))),
+    clearAll: () => tx(['cards', 'images'], 'readwrite', t => { t.objectStore('cards').clear(); t.objectStore('images').clear(); }),
+    async estimate() {
+      try { return navigator.storage && navigator.storage.estimate ? await navigator.storage.estimate() : null; } catch (e) { return null; }
+    },
+    async persist() {
+      try { return navigator.storage && navigator.storage.persist ? await navigator.storage.persist() : false; } catch (e) { return false; }
+    },
+  };
+
+  root.CardStore = Store;
+})(typeof self !== 'undefined' ? self : this);
+
+/* ---- ocr.js ---- */
+/* 影像前處理與 OCR 引擎:
+ *  - tesseract:Tesseract.js 在瀏覽器內辨識(繁中+英文),免金鑰;第一次使用會下載語言檔(約 20 MB,之後快取)。
+ *  - claude:Claude 視覺模型直接讀名片並回傳結構化欄位,準確度高,需自己的 Anthropic API 金鑰(只存在這台裝置)。 */
+(function (root) {
+  'use strict';
+  const TESSERACT_URL = 'https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js';
+  const ANTHROPIC_SDK_URL = 'https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@0.135.0/+esm';
+  const FALLBACK_MODELS = ['claude-opus-5-5', 'claude-sonnet-5-5', 'claude-fable-5-1'];
+
+  /* ---------- 影像 ---------- */
+  async function loadBitmap(file) {
+    if (root.createImageBitmap) {
+      try { return await createImageBitmap(file, { imageOrientation: 'from-image' }); } catch (e) { /* 舊瀏覽器退回 <img> */ }
+    }
+    const url = URL.createObjectURL(file);
+    try {
+      const img = new Image();
+      img.src = url;
+      await img.decode();
+      return img;
+    } finally { URL.revokeObjectURL(url); }
+  }
+
+  /** 縮放、旋轉;回傳 canvas。rotate 為 0/90/180/270 */
+  function drawScaled(src, maxSide, rotate) {
+    const w = src.width, h = src.height;
+    const k = Math.min(1, maxSide / Math.max(w, h));
+    const sw = Math.round(w * k), sh = Math.round(h * k);
+    const swap = rotate === 90 || rotate === 270;
+    const c = document.createElement('canvas');
+    c.width = swap ? sh : sw; c.height = swap ? sw : sh;
+    const g = c.getContext('2d');
+    g.translate(c.width / 2, c.height / 2);
+    g.rotate((rotate || 0) * Math.PI / 180);
+    g.drawImage(src, -sw / 2, -sh / 2, sw, sh);
+    return c;
+  }
+
+  /** OCR 用:灰階 + 自動對比拉伸,讓 Tesseract 對淺色字、彩色底更穩 */
+  function enhanceForOcr(canvas) {
+    const g = canvas.getContext('2d');
+    const im = g.getImageData(0, 0, canvas.width, canvas.height);
+    const d = im.data, hist = new Uint32Array(256);
+    for (let i = 0; i < d.length; i += 4) {
+      const y = (d[i] * 299 + d[i + 1] * 587 + d[i + 2] * 114) / 1000 | 0;
+      d[i] = y; hist[y]++;
+    }
+    const n = d.length / 4;
+    let lo = 0, hi = 255, acc = 0;
+    while (lo < 255 && (acc += hist[lo]) < n * 0.01) lo++;
+    acc = 0;
+    while (hi > 0 && (acc += hist[hi]) < n * 0.01) hi--;
+    const span = Math.max(1, hi - lo);
+    for (let i = 0; i < d.length; i += 4) {
+      const v = Math.max(0, Math.min(255, (d[i] - lo) * 255 / span));
+      d[i] = d[i + 1] = d[i + 2] = v;
+    }
+    g.putImageData(im, 0, 0);
+    return canvas;
+  }
+
+  const toBlob = (canvas, type, q) => new Promise(r => canvas.toBlob(r, type, q));
+
+  /** 讀入照片 → {image: 存檔用 JPEG Blob, thumb: 縮圖 Blob, bitmap} */
+  async function prepare(file, rotate = 0) {
+    const bmp = await loadBitmap(file);
+    const image = await toBlob(drawScaled(bmp, 1600, rotate), 'image/jpeg', 0.85);
+    return { image, bitmap: bmp, rotate };
+  }
+
+  /* ---------- Tesseract ---------- */
+  let tessWorker = null, tessLangs = '';
+  function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      if ([...document.scripts].some(s => s.src === src)) return resolve();
+      const s = document.createElement('script');
+      s.src = src; s.async = true; s.crossOrigin = 'anonymous';
+      s.onload = resolve;
+      s.onerror = () => reject(new Error('無法載入 OCR 引擎(需要網路連線下載一次)'));
+      document.head.appendChild(s);
+    });
+  }
+
+  async function tesseract(prep, { langs = 'chi_tra', onProgress } = {}) {
+    await loadScript(TESSERACT_URL);
+    if (!tessWorker || tessLangs !== langs) {
+      if (tessWorker) await tessWorker.terminate();
+      tessWorker = await root.Tesseract.createWorker(langs.split('+'), 1, {
+        logger: m => onProgress && onProgress(m.status, m.progress),
+      });
+      // PSM 11(稀疏文字):名片常是左右分欄、大小字混排,逐塊找字比預設的單一區塊(PSM 6)準
+      await tessWorker.setParameters({ preserve_interword_spaces: '1', tessedit_pageseg_mode: '11' });
+      tessLangs = langs;
+    }
+    const canvas = enhanceForOcr(drawScaled(prep.bitmap, 2400, prep.rotate));
+    const { data } = await tessWorker.recognize(canvas);
+    const text = data.text || '';
+    const parsed = root.CardParser.parseCardText(text);
+    return { text, fields: parsed.fields, unmatched: parsed.unmatched, confidence: data.confidence };
+  }
+
+  /* ---------- Claude ---------- */
+  const CLAUDE_FIELDS = ['name', 'nameEn', 'company', 'companyEn', 'department', 'title', 'mobile', 'tel', 'fax',
+    'email', 'website', 'address', 'taxId', 'lineId', 'other', 'rawText'];
+  const SCHEMA = {
+    type: 'object',
+    properties: Object.fromEntries(CLAUDE_FIELDS.map(k => [k, { type: 'string' }])),
+    required: CLAUDE_FIELDS,
+    additionalProperties: false,
+  };
+  const PROMPT = `這是一張名片的照片(可能是中文、英文或日文,也可能正反面都在同一張圖)。請讀出名片上的所有資訊,填入 JSON 欄位:
+- name:姓名(中文名優先;只有外文名就填外文名)。nameEn:英文/外文姓名(和 name 不同時才填)。
+- company:公司全名(中文優先)。companyEn:公司英文名。department:部門。title:職稱(多個用「 / 」分隔)。
+- mobile:手機;tel:市話/公司電話(含分機寫成「 #123」);fax:傳真。多個號碼用「 / 」分隔,保留原本的區碼與 + 國碼格式。
+- email、website、address(完整地址,中文地址優先)、taxId(統一編號)、lineId。
+- other:名片上其他有用但不屬於上述欄位的資訊(例如服務項目、其他社群帳號),沒有就空字串。
+- rawText:名片上所有文字,依原本排列逐行抄寫。
+看不清楚或名片上沒有的欄位填空字串,不要猜測或補造。`;
+
+  async function claude(prep, { apiKey, model = 'claude-opus-5-5', onProgress } = {}) {
+    if (!apiKey) throw new Error('請先在「設定」輸入 Anthropic API 金鑰');
+    onProgress && onProgress('載入 Claude SDK', 0.1);
+    let mod;
+    try { mod = await import(ANTHROPIC_SDK_URL); } catch (e) { throw new Error('無法載入 Claude SDK(需要網路連線)'); }
+    const Anthropic = mod.default || mod.Anthropic;
+    const client = new Anthropic({ apiKey, dangerouslyAllowBrowser: true, maxRetries: 2 });
+    const data = await blobToBase64(prep.image);
+    onProgress && onProgress('Claude 辨識中', 0.4);
+    const params = {
+      model,
+      max_tokens: 8000,
+      output_config: { effort: 'low', format: { type: 'json_schema', schema: SCHEMA } },
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data } },
+          { type: 'text', text: PROMPT },
+        ],
+      }],
+    };
+    if (FALLBACK_MODELS.includes(model)) { // 模型婉拒時由伺服器改用備援模型重跑
+      params.betas = ['server-side-fallback-2026-07-01'];
+      params.fallbacks = 'default';
+    }
+    let msg;
+    try {
+      msg = await client.beta.messages.create(params);
+    } catch (e) {
+      if (e instanceof Anthropic.AuthenticationError) throw new Error('API 金鑰無效,請到「設定」確認');
+      if (e instanceof Anthropic.PermissionDeniedError) throw new Error('這把金鑰沒有使用此模型的權限');
+      if (e instanceof Anthropic.RateLimitError) throw new Error('呼叫太頻繁或額度不足,請稍後再試');
+      if (e instanceof Anthropic.BadRequestError) throw new Error('請求被拒:' + (e.message || '格式錯誤'));
+      if (e instanceof Anthropic.APIConnectionError) throw new Error('連不上 Claude API,請檢查網路');
+      throw e;
+    }
+    if (msg.stop_reason === 'refusal') throw new Error('Claude 無法處理這張圖片,請改用本機 OCR');
+    if (msg.stop_reason === 'max_tokens') throw new Error('回應被截斷,請再試一次');
+    const block = msg.content.find(b => b.type === 'text');
+    if (!block) throw new Error('Claude 沒有回傳內容');
+    const out = JSON.parse(block.text);
+    const fields = {};
+    for (const k of CLAUDE_FIELDS) if (k !== 'rawText' && k !== 'other' && out[k]) fields[k] = String(out[k]).trim();
+    onProgress && onProgress('完成', 1);
+    return { text: out.rawText || '', fields, unmatched: out.other ? [out.other] : [], model: msg.model };
+  }
+
+  function blobToBase64(blob) {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result).split(',')[1]);
+      r.onerror = () => reject(r.error);
+      r.readAsDataURL(blob);
+    });
+  }
+
+  root.CardOCR = { prepare, tesseract, claude, blobToBase64, CLAUDE_FIELDS };
+})(typeof self !== 'undefined' ? self : this);
+
+/* ---- app.js ---- */
+/* 名片庫主程式:清單與快速索引、掃描流程、編輯、重複偵測、匯入匯出、設定。 */
+(function () {
+  'use strict';
+  const { CardIndex, groupCards, highlight, escapeHtml, parseQuery } = self.CardSearch;
+  const Store = self.CardStore, OCR = self.CardOCR, Parser = self.CardParser;
+  const $ = (s, el = document) => el.querySelector(s);
+  const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+  const esc = escapeHtml;
+
+  const FIELD_LABELS = {
+    name: '姓名', nameEn: '英文姓名', company: '公司', companyEn: '公司英文名', department: '部門', title: '職稱',
+    mobile: '手機', tel: '電話', fax: '傳真', email: 'Email', website: '網站', address: '地址', taxId: '統一編號', lineId: 'LINE ID',
+    tags: '標籤', notes: '備註',
+  };
+  const EDIT_FIELDS = Object.keys(FIELD_LABELS);
+  const MULTI = ['mobile', 'tel', 'fax', 'email'];
+
+  /* ---------- 設定 ---------- */
+  const SETTINGS_KEY = 'card-scanner-settings';
+  const settings = Object.assign({ engine: 'tesseract', langs: 'chi_tra', apiKey: '', model: 'claude-opus-5-5', mode: 'name' }, (() => {
+    try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch (e) { return {}; }
+  })());
+  const saveSettings = () => { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) { /* 私密瀏覽 */ } };
+
+  /* ---------- 狀態 ---------- */
+  let cards = [], index = new CardIndex([]), results = [], sel = -1;
+  const filters = { tags: new Set(), review: false, fav: false };
+  const thumbs = new Map(); // id → objectURL
+
+  /* ---------- 小工具 ---------- */
+  function toast(msg, ms = 2600) {
+    const t = $('#toast');
+    t.textContent = msg; t.classList.add('on');
+    clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('on'), ms);
+  }
+  function download(content, name, type) {
+    const blob = content instanceof Blob ? content : new Blob([content], { type });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  }
+  const today = () => new Date().toISOString().slice(0, 10);
+  const digits = s => String(s || '').replace(/\D/g, '');
+  const splitMulti = s => String(s || '').split(/\s*\/\s*/).map(x => x.trim()).filter(Boolean);
+  const splitTags = s => [...new Set(String(s || '').split(/[,，、;；]/).map(x => x.trim().replace(/^#/, '')).filter(Boolean))];
+  const initial = c => ((c.name || c.company || '?').trim().charAt(0) || '?').toUpperCase();
+
+  /* ---------- 資料載入 ---------- */
+  async function refresh() {
+    try { cards = await Store.allCards(); }
+    catch (e) { cards = []; toast('無法開啟資料庫:' + e.message, 6000); }
+    index = new CardIndex(cards);
+    updateDatalists();
+    render();
+  }
+
+  function updateDatalists() {
+    const companies = [...new Set(cards.map(c => c.company).filter(Boolean))].sort();
+    $('#dl-company').innerHTML = companies.map(c => `<option value="${esc(c)}">`).join('');
+    $('#dl-tags').innerHTML = allTags().map(([t]) => `<option value="${esc(t)}">`).join('');
+  }
+  function allTags() {
+    const m = new Map();
+    for (const c of cards) for (const t of c.tags || []) m.set(t, (m.get(t) || 0) + 1);
+    return [...m.entries()].sort((a, b) => b[1] - a[1]);
+  }
+
+  /* ---------- 清單 ---------- */
+  function filtered(list) {
+    return list.filter(c => (!filters.review || c.needsReview) && (!filters.fav || c.favorite) &&
+      [...filters.tags].every(t => (c.tags || []).includes(t)));
+  }
+
+  function renderChips() {
+    const review = cards.filter(c => c.needsReview).length;
+    const fav = cards.filter(c => c.favorite).length;
+    const tags = allTags().slice(0, 12);
+    for (const t of filters.tags) if (!tags.some(([x]) => x === t)) tags.push([t, 0]);
+    $('#chips').innerHTML =
+      (review ? `<button type="button" class="chip warn" data-chip="review" aria-pressed="${filters.review}">待確認 ${review}</button>` : '') +
+      (fav ? `<button type="button" class="chip" data-chip="fav" aria-pressed="${filters.fav}">★ 星號 ${fav}</button>` : '') +
+      tags.map(([t, n]) => `<button type="button" class="chip" data-tag="${esc(t)}" aria-pressed="${filters.tags.has(t)}">#${esc(t)} <small>${n || ''}</small></button>`).join('');
+  }
+
+  function cardHtml(c, q, i) {
+    const sub = [c.title, c.department, c.company].filter(Boolean);
+    const meta = [splitMulti(c.mobile)[0], splitMulti(c.tel)[0], splitMulti(c.email)[0]].filter(Boolean);
+    // 搜尋命中但不在顯示欄位的資訊(地址、備註…)也露出來,讓人知道為何被找到
+    let extra = '';
+    if (q) {
+      const terms = parseQuery(q).filter(t => !t.negate);
+      for (const k of ['address', 'notes', 'website', 'taxId', 'lineId', 'nameEn', 'companyEn', 'fax']) {
+        const v = c[k];
+        if (v && terms.some(t => String(v).normalize('NFKC').toLowerCase().includes(t.norm))) { extra = `${FIELD_LABELS[k]}:${highlight(v, q)}`; break; }
+      }
+    }
+    const tags = (c.tags || []).map(t => `<span class="tag">#${highlight(t, q)}</span>`).join('') + (c.needsReview ? '<span class="tag review">待確認</span>' : '');
+    return `<button type="button" class="card" data-id="${esc(c.id)}" data-i="${i}">
+      <span class="avatar" data-thumb="${c.hasImage ? esc(c.id) : ''}">${esc(initial(c))}</span>
+      <span><span class="nm">${highlight(c.name || c.company || '(未命名)', q)}${c.nameEn && c.name !== c.nameEn ? `<small>${highlight(c.nameEn, q)}</small>` : ''}</span>
+        ${sub.length ? `<span class="sub" style="display:block">${sub.map(s => highlight(s, q)).join(' · ')}</span>` : ''}
+        ${meta.length ? `<span class="meta" style="display:block">${meta.map(s => highlight(s, q)).join(' · ')}</span>` : ''}
+        ${extra ? `<span class="meta" style="display:block">${extra}</span>` : ''}
+        ${tags ? `<span class="tags">${tags}</span>` : ''}</span>
+      ${c.favorite ? '<span class="star" aria-label="星號">★</span>' : '<span></span>'}
+    </button>`;
+  }
+
+  function render() {
+    const q = $('#q').value.trim();
+    $('#search-box').classList.toggle('has-q', !!q);
+    $('#count').textContent = cards.length ? `${cards.length} 張` : '';
+    $$('#group-mode button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === settings.mode)));
+    renderChips();
+    const main = $('#main');
+    if (!cards.length) {
+      main.innerHTML = `<div class="empty"><svg class="i big"><use href="#i-card"/></svg><h2>還沒有名片</h2>
+        <p>按「掃描名片」用手機拍照,或把名片照片拖曳到這個視窗(可一次多張)。<br>辨識結果可修改後存入,之後用上方搜尋框即時查找。</p>
+        <div class="actions"><button class="btn primary" type="button" data-act="scan"><svg class="i"><use href="#i-camera"/></svg>掃描名片</button>
+        <button class="btn" type="button" data-act="demo">載入示範名片</button><button class="btn" type="button" data-act="import">匯入備份</button></div></div>`;
+      $('#rail').innerHTML = ''; $('#result-info').textContent = ''; results = []; return;
+    }
+    const t0 = performance.now();
+    let groups;
+    if (q) {
+      const hits = filtered(index.search(q).map(r => r.card));
+      groups = hits.length ? [{ key: '最相關', cards: hits }] : [];
+    } else groups = groupCards(filtered(cards), settings.mode);
+    results = [];
+    let html = '';
+    for (const g of groups) {
+      const items = g.cards.map(c => { results.push(c); return cardHtml(c, q, results.length - 1); }).join('');
+      html += `<section class="group" data-key="${esc(g.key)}"><h2>${esc(g.key)} <small>${g.cards.length}</small></h2><div class="cards">${items}</div></section>`;
+    }
+    const ms = performance.now() - t0;
+    main.innerHTML = html || `<div class="empty"><h2>找不到符合的名片</h2><p>試試較短的關鍵字、電話末四碼,或清除標籤篩選。</p></div>`;
+    $('#result-info').textContent = q || filters.tags.size || filters.review || filters.fav ? `${results.length} 筆 · ${ms < 1 ? '<1' : ms.toFixed(0)} ms` : '';
+    sel = q && results.length ? 0 : -1;
+    markSel(false);
+    renderRail(q ? [] : groups);
+    observeThumbs();
+  }
+
+  /* ---------- 縮圖(進入畫面才讀) ---------- */
+  const io = 'IntersectionObserver' in self ? new IntersectionObserver(entries => {
+    for (const e of entries) if (e.isIntersecting) { io.unobserve(e.target); loadThumb(e.target); }
+  }, { rootMargin: '300px' }) : null;
+  function observeThumbs() {
+    $$('.avatar[data-thumb]:not([data-thumb=""])').forEach(el => (io ? io.observe(el) : loadThumb(el)));
+  }
+  async function loadThumb(el) {
+    const id = el.dataset.thumb;
+    let url = thumbs.get(id);
+    if (!url) {
+      const blob = await Store.getImage(id).catch(() => null);
+      if (!blob) return;
+      url = URL.createObjectURL(blob); thumbs.set(id, url);
+    }
+    el.innerHTML = `<img src="${url}" alt="">`;
+  }
+  function dropThumb(id) { const u = thumbs.get(id); if (u) { URL.revokeObjectURL(u); thumbs.delete(id); } }
+
+  /* ---------- 快速索引列 ---------- */
+  function renderRail(groups) {
+    const rail = $('#rail');
+    if (groups.length < 2) { rail.innerHTML = ''; return; }
+    const label = k => settings.mode === 'month' ? k.slice(2).replace('-', '/') : k.startsWith('(') ? '…' : k.slice(0, settings.mode === 'name' ? 1 : 2);
+    // 太多組時抽樣顯示,拖曳仍可逐組跳
+    const max = Math.max(8, Math.floor((rail.clientHeight || 500) / 17));
+    const step = Math.ceil(groups.length / max);
+    rail.dataset.keys = JSON.stringify(groups.map(g => g.key));
+    rail.innerHTML = groups.filter((g, i) => i % step === 0).map(g => `<button type="button" data-key="${esc(g.key)}" title="${esc(g.key)}">${esc(label(g.key))}</button>`).join('');
+  }
+  function jumpTo(key, pop) {
+    const sec = $$('.group').find(s => s.dataset.key === key);
+    if (!sec) return;
+    const hdr = $('#top').offsetHeight;
+    window.scrollTo({ top: sec.getBoundingClientRect().top + scrollY - hdr - 4 });
+    if (pop) { const p = $('#rail-pop'); p.textContent = key.length > 6 ? key.slice(0, 6) + '…' : key; p.classList.add('on'); }
+  }
+  function railFromPoint(y) {
+    const rail = $('#rail');
+    const keys = JSON.parse(rail.dataset.keys || '[]');
+    if (!keys.length) return null;
+    const r = rail.getBoundingClientRect();
+    const btns = $$('button', rail);
+    const usedH = btns.length ? btns[btns.length - 1].getBoundingClientRect().bottom - r.top : r.height;
+    const k = Math.max(0, Math.min(keys.length - 1, Math.floor((y - r.top) / Math.max(1, usedH) * keys.length)));
+    return keys[k];
+  }
+  function setupRail() {
+    const rail = $('#rail');
+    let dragging = false;
+    const move = e => { const k = railFromPoint(e.clientY); if (k) jumpTo(k, true); };
+    rail.addEventListener('pointerdown', e => { dragging = true; rail.setPointerCapture(e.pointerId); move(e); e.preventDefault(); });
+    rail.addEventListener('pointermove', e => { if (dragging) move(e); });
+    const end = () => { dragging = false; setTimeout(() => $('#rail-pop').classList.remove('on'), 350); };
+    rail.addEventListener('pointerup', end); rail.addEventListener('pointercancel', end);
+  }
+
+  /* ---------- 鍵盤 ---------- */
+  function markSel(scroll = true) {
+    $$('.card.sel').forEach(el => el.classList.remove('sel'));
+    if (sel < 0) return;
+    const el = $(`.card[data-i="${sel}"]`);
+    if (el) { el.classList.add('sel'); if (scroll) el.scrollIntoView({ block: 'nearest' }); }
+  }
+  function setupKeys() {
+    document.addEventListener('keydown', e => {
+      const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) && e.target.id !== 'q';
+      if (document.querySelector('dialog[open]') || typing) return;
+      if (e.key === '/' && e.target.id !== 'q') { e.preventDefault(); $('#q').focus(); $('#q').select(); return; }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        if (!results.length) return;
+        e.preventDefault();
+        sel = Math.max(0, Math.min(results.length - 1, sel + (e.key === 'ArrowDown' ? 1 : -1)));
+        markSel();
+      } else if (e.key === 'Enter' && sel >= 0 && results[sel]) { e.preventDefault(); openCard(results[sel]); }
+      else if (e.key === 'Escape' && e.target.id === 'q') { $('#q').value = ''; render(); }
+    });
+  }
+
+  /* ---------- 掃描 ---------- */
+  function jobUi(name) {
+    const el = document.createElement('div');
+    el.className = 'job';
+    el.innerHTML = `<div><b>${esc(name)}</b> <span class="st">準備中…</span></div><div class="bar"><i></i></div>`;
+    $('#queue').appendChild(el);
+    return {
+      progress(status, p) {
+        $('.st', el).textContent = statusText(status);
+        if (p != null) $('.bar i', el).style.width = Math.round(p * 100) + '%';
+      },
+      fail(msg) { el.classList.add('err'); $('.st', el).textContent = msg; setTimeout(() => el.remove(), 8000); },
+      done() { $('.bar i', el).style.width = '100%'; setTimeout(() => el.remove(), 600); },
+    };
+  }
+  function statusText(s) {
+    return ({ 'loading tesseract core': '載入 OCR 引擎', 'initializing tesseract': '初始化', 'loading language traineddata': '下載語言檔(第一次較久)',
+      'initializing api': '初始化', 'recognizing text': '辨識文字' })[s] || s || '';
+  }
+
+  async function runOcr(prep, job) {
+    const onProgress = (s, p) => job && job.progress(s, p);
+    if (settings.engine === 'claude') return OCR.claude(prep, { apiKey: settings.apiKey, model: settings.model, onProgress });
+    return OCR.tesseract(prep, { langs: settings.langs, onProgress });
+  }
+
+  async function scanFiles(files) {
+    files = [...files].filter(f => /^image\//.test(f.type));
+    if (!files.length) return;
+    if (files.length === 1) return scanOne(files[0]);
+    // 多張:逐張辨識直接建檔,標為「待確認」
+    let ok = 0;
+    for (const f of files) {
+      const job = jobUi(f.name || '名片');
+      try {
+        const prep = await OCR.prepare(f);
+        const r = await runOcr(prep, job);
+        await Store.saveCard({ ...r.fields, tags: [], notes: '', rawText: r.text, needsReview: true, source: settings.engine }, prep.image);
+        ok++; job.done();
+      } catch (e) { job.fail(e.message || String(e)); }
+    }
+    await refresh();
+    if (ok) { filters.review = true; render(); toast(`已建檔 ${ok} 張,請檢查「待確認」的名片`, 4000); }
+  }
+
+  async function scanOne(file) {
+    const job = jobUi(file.name || '名片');
+    let prep;
+    try {
+      prep = await OCR.prepare(file);
+      const r = await runOcr(prep, job);
+      job.done();
+      openEditor({ ...r.fields, rawText: r.text, source: settings.engine }, { image: prep.image, isNew: true, ocr: r });
+    } catch (e) {
+      job.fail(e.message || String(e));
+      if (prep) openEditor({}, { image: prep.image, isNew: true, error: '辨識失敗:' + (e.message || e) + '。可手動輸入,或到設定切換 OCR 引擎。' });
+    }
+  }
+
+  /* ---------- 編輯 ---------- */
+  const ed = { card: null, image: null, imageChanged: false, isNew: false, url: null };
+
+  async function openCard(card) {
+    const image = card.hasImage ? await Store.getImage(card.id).catch(() => null) : null;
+    openEditor(card, { image, isNew: false });
+  }
+
+  function openEditor(card, { image, isNew, ocr, error } = {}) {
+    ed.card = { ...card }; ed.image = image || null; ed.imageChanged = isNew && !!image; ed.isNew = !!isNew;
+    const form = $('#edit-form');
+    for (const k of EDIT_FIELDS) {
+      const el = form.elements[k];
+      el.value = k === 'tags' ? (card.tags || []).join(', ') : card[k] || '';
+      el.classList.toggle('ocr-hit', !!(ocr && ocr.fields[k]));
+    }
+    $('#edit-title').textContent = isNew ? '新增名片' : card.name || card.company || '名片';
+    $('#edit-delete').hidden = isNew;
+    setFav(!!card.favorite);
+    let notice = '';
+    if (error) notice = `<div class="notice">${esc(error)}</div>`;
+    else if (ocr) {
+      const n = Object.keys(ocr.fields).length;
+      notice = `<div class="notice ok">已辨識出 ${n} 個欄位(綠底),請核對後儲存。${ocr.unmatched && ocr.unmatched.length ? '未歸類的文字:' + esc(ocr.unmatched.join(' | ')) : ''}</div>`;
+    } else if (card.needsReview) notice = '<div class="notice">這張是批次建檔的名片,請核對欄位後按「儲存」。</div>';
+    if (!isNew && card.updatedAt) notice += `<div class="hint" style="margin-bottom:8px">建檔 ${new Date(card.createdAt).toLocaleDateString('zh-TW')} · 更新 ${new Date(card.updatedAt).toLocaleString('zh-TW')}</div>`;
+    $('#edit-notice').innerHTML = notice;
+    $('#edit-raw').textContent = card.rawText || '';
+    $('#edit-raw-wrap').hidden = !card.rawText;
+    showShot();
+    renderQuick(card);
+    const dlg = $('#dlg-edit');
+    if (!dlg.open) dlg.showModal();
+    $('.dlg-body', dlg).scrollTop = 0;
+    if (isNew && matchMedia('(pointer:fine)').matches) setTimeout(() => form.elements.name.focus({ preventScroll: true }), 50);
+  }
+
+  function showShot() {
+    if (ed.url) { URL.revokeObjectURL(ed.url); ed.url = null; }
+    const shot = $('#edit-shot');
+    if (ed.image) {
+      ed.url = URL.createObjectURL(ed.image);
+      shot.innerHTML = `<img src="${ed.url}" alt="名片照片">`;
+    } else shot.innerHTML = '<div class="none">沒有名片圖片<br>按「換照片」加入</div>';
+    $('#edit-rotate').disabled = $('#edit-reocr').disabled = !ed.image;
+  }
+
+  function renderQuick(c) {
+    const links = [];
+    for (const p of splitMulti(c.mobile).concat(splitMulti(c.tel))) links.push(`<a href="tel:${esc(p.replace(/[^\d+#]/g, '').replace('#', ','))}"><svg class="i"><use href="#i-phone"/></svg>${esc(p)}</a>`);
+    for (const m of splitMulti(c.email)) links.push(`<a href="mailto:${esc(m)}"><svg class="i"><use href="#i-mail"/></svg>${esc(m)}</a>`);
+    if (c.address) links.push(`<a target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.address)}"><svg class="i"><use href="#i-pin"/></svg>地圖</a>`);
+    if (c.website) links.push(`<a target="_blank" rel="noopener" href="${esc(/^https?:/i.test(c.website) ? c.website : 'https://' + c.website)}"><svg class="i"><use href="#i-link"/></svg>網站</a>`);
+    $('#edit-quick').innerHTML = links.join('');
+  }
+
+  function setFav(on) {
+    const b = $('#edit-fav');
+    b.setAttribute('aria-pressed', String(on)); b.textContent = on ? '★' : '☆'; b.style.color = on ? 'var(--orange)' : '';
+    ed.card.favorite = on;
+  }
+
+  function readForm() {
+    const form = $('#edit-form');
+    const c = { ...ed.card };
+    for (const k of EDIT_FIELDS) {
+      const v = form.elements[k].value.trim();
+      if (k === 'tags') c.tags = splitTags(v);
+      else if (v) c[k] = v; else delete c[k];
+    }
+    return c;
+  }
+
+  function findDuplicate(c) {
+    const emails = splitMulti(c.email).map(e => e.toLowerCase());
+    const phones = splitMulti(c.mobile).map(digits).filter(d => d.length >= 8);
+    return cards.find(o => o.id !== c.id && (
+      emails.some(e => splitMulti(o.email).map(x => x.toLowerCase()).includes(e)) ||
+      phones.some(p => splitMulti(o.mobile).map(digits).includes(p)) ||
+      (c.name && o.name === c.name && c.company && o.company === c.company)));
+  }
+
+  function mergeInto(old, neu) {
+    const m = { ...old };
+    for (const k of Object.keys(FIELD_LABELS)) {
+      if (k === 'tags') { m.tags = [...new Set([...(old.tags || []), ...(neu.tags || [])])]; continue; }
+      const nv = neu[k]; if (!nv) continue;
+      if (k === 'notes') { m.notes = old.notes && old.notes !== nv ? old.notes + '\n' + nv : nv; continue; }
+      if (MULTI.includes(k) && old[k]) {
+        const have = splitMulti(old[k]);
+        for (const v of splitMulti(nv)) if (!have.some(h => digits(h) === digits(v) && digits(v) ? true : h.toLowerCase() === v.toLowerCase())) have.push(v);
+        m[k] = have.join(' / ');
+      } else {
+        if (old[k] && old[k] !== nv && ['title', 'company', 'department', 'address'].includes(k)) m.notes = (m.notes ? m.notes + '\n' : '') + `舊${FIELD_LABELS[k]}:${old[k]}`;
+        m[k] = nv;
+      }
+    }
+    m.rawText = neu.rawText || old.rawText;
+    m.favorite = old.favorite || neu.favorite;
+    return m;
+  }
+
+  async function saveEditor() {
+    let c = readForm();
+    if (!c.name && !c.company && !c.mobile && !c.tel && !c.email) { toast('請至少填入姓名、公司、電話或 Email 其中一項'); return false; }
+    c.needsReview = false;
+    let image = ed.imageChanged ? ed.image : null;
+    if (ed.isNew) {
+      const dup = findDuplicate(c);
+      if (dup && confirm(`這張名片看起來和既有的「${dup.name || dup.company}${dup.company && dup.name ? '(' + dup.company + ')' : ''}」是同一人。\n\n按「確定」合併到既有名片(新資料覆蓋、電話與 Email 累加、舊職稱記入備註);\n按「取消」另存一張新名片。`)) {
+        c = mergeInto(dup, c);
+        if (image) dropThumb(dup.id);
+      }
+    } else if (image) dropThumb(c.id);
+    await Store.saveCard(c, image);
+    $('#dlg-edit').close();
+    await refresh();
+    toast(ed.isNew ? '已存入名片庫' : '已更新');
+    return true;
+  }
+
+  async function rotateImage() {
+    if (!ed.image) return;
+    const bmp = await createImageBitmap(ed.image);
+    const c = document.createElement('canvas');
+    c.width = bmp.height; c.height = bmp.width;
+    const g = c.getContext('2d');
+    g.translate(c.width / 2, c.height / 2); g.rotate(Math.PI / 2); g.drawImage(bmp, -bmp.width / 2, -bmp.height / 2);
+    ed.image = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.88));
+    ed.imageChanged = true;
+    showShot();
+  }
+
+  async function reOcr(file) {
+    const src = file || ed.image;
+    if (!src) return;
+    const job = jobUi('重新辨識');
+    try {
+      const prep = await OCR.prepare(src);
+      if (file) { ed.image = prep.image; ed.imageChanged = true; showShot(); }
+      const r = await runOcr(prep, job);
+      job.done();
+      const form = $('#edit-form');
+      let n = 0;
+      for (const [k, v] of Object.entries(r.fields)) {
+        const el = form.elements[k];
+        if (el && v && (!el.value.trim() || confirmOverwrite(k, el.value, v))) { el.value = v; el.classList.add('ocr-hit'); n++; }
+      }
+      ed.card.rawText = r.text;
+      $('#edit-raw').textContent = r.text; $('#edit-raw-wrap').hidden = !r.text;
+      toast(`辨識完成,更新 ${n} 個欄位`);
+    } catch (e) { job.fail(e.message || String(e)); }
+  }
+  let overwriteAll = null;
+  function confirmOverwrite(k, oldV, newV) {
+    if (oldV.trim() === newV.trim()) return false;
+    if (overwriteAll === null) overwriteAll = confirm('辨識結果和目前欄位內容不同。要用新的辨識結果覆蓋已填的欄位嗎?\n(取消 = 只補空白欄位)');
+    setTimeout(() => { overwriteAll = null; }, 0);
+    return overwriteAll;
+  }
+
+  /* ---------- 匯出 ---------- */
+  const CSV_COLS = ['name', 'nameEn', 'company', 'companyEn', 'department', 'title', 'mobile', 'tel', 'fax', 'email', 'website', 'address', 'taxId', 'lineId', 'tags', 'notes', 'createdAt'];
+  function toCsv(list) {
+    const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    const head = CSV_COLS.map(k => q(k === 'createdAt' ? '建檔日期' : FIELD_LABELS[k])).join(',');
+    const rows = list.map(c => CSV_COLS.map(k => q(k === 'tags' ? (c.tags || []).join(', ') : k === 'createdAt' ? (c.createdAt ? new Date(c.createdAt).toISOString().slice(0, 10) : '') : c[k])).join(','));
+    return '\ufeff' + [head, ...rows].join('\r\n');
+  }
+  const COMPOUND = ['歐陽', '司馬', '諸葛', '上官', '張簡', '范姜', '東方', '皇甫', '司徒', '公孫', '令狐', '慕容', '尉遲', '長孫', '夏侯', '端木'];
+  function splitName(name) {
+    name = (name || '').trim();
+    if (/^[\u3400-\u9fff]{2,5}$/.test(name)) {
+      const fam = COMPOUND.find(s => name.startsWith(s) && name.length > 2) || name[0];
+      return [fam, name.slice(fam.length)];
+    }
+    const w = name.split(/\s+/);
+    return w.length > 1 ? [w[w.length - 1], w.slice(0, -1).join(' ')] : [name, ''];
+  }
+  const vesc = s => String(s || '').replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/([,;])/g, '\\$1');
+  function toVcard(c) {
+    const [fam, given] = splitName(c.name || c.nameEn || '');
+    const L = ['BEGIN:VCARD', 'VERSION:3.0', `N:${vesc(fam)};${vesc(given)};;;`, `FN:${vesc(c.name || c.nameEn || c.company || '')}`];
+    if (c.nameEn && c.nameEn !== c.name) L.push(`X-PHONETIC-FIRST-NAME:${vesc(c.nameEn)}`);
+    if (c.company || c.department) L.push(`ORG:${vesc(c.company)}${c.department ? ';' + vesc(c.department) : ''}`);
+    if (c.title) L.push(`TITLE:${vesc(c.title)}`);
+    for (const p of splitMulti(c.mobile)) L.push(`TEL;TYPE=CELL:${p}`);
+    for (const p of splitMulti(c.tel)) L.push(`TEL;TYPE=WORK,VOICE:${p}`);
+    for (const p of splitMulti(c.fax)) L.push(`TEL;TYPE=WORK,FAX:${p}`);
+    for (const m of splitMulti(c.email)) L.push(`EMAIL;TYPE=INTERNET,WORK:${m}`);
+    if (c.website) L.push(`URL:${c.website}`);
+    if (c.address) L.push(`ADR;TYPE=WORK:;;${vesc(c.address)};;;;`);
+    if (c.tags && c.tags.length) L.push(`CATEGORIES:${c.tags.map(vesc).join(',')}`);
+    const note = [c.notes, c.taxId && '統一編號:' + c.taxId, c.lineId && 'LINE:' + c.lineId].filter(Boolean).join('\n');
+    if (note) L.push(`NOTE:${vesc(note)}`);
+    L.push('END:VCARD');
+    return L.join('\r\n');
+  }
+  async function exportJson() {
+    const images = {};
+    for (const c of cards) if (c.hasImage) {
+      const b = await Store.getImage(c.id).catch(() => null);
+      if (b) images[c.id] = 'data:image/jpeg;base64,' + await OCR.blobToBase64(b);
+    }
+    download(JSON.stringify({ app: 'card-scanner', version: 1, exportedAt: new Date().toISOString(), cards, images }), `名片庫備份-${today()}.json`, 'application/json');
+  }
+
+  /* ---------- 匯入 ---------- */
+  function parseCsv(text) {
+    const rows = []; let row = [], f = '', i = 0, inQ = false;
+    text = text.replace(/^\ufeff/, '');
+    for (; i < text.length; i++) {
+      const ch = text[i];
+      if (inQ) { if (ch === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else inQ = false; } else f += ch; }
+      else if (ch === '"') inQ = true;
+      else if (ch === ',') { row.push(f); f = ''; }
+      else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(f); rows.push(row); row = []; f = ''; }
+      else f += ch;
+    }
+    if (f || row.length) { row.push(f); rows.push(row); }
+    return rows.filter(r => r.some(x => x.trim()));
+  }
+  function csvToCards(text) {
+    const rows = parseCsv(text);
+    if (rows.length < 2) return [];
+    const byLabel = Object.fromEntries(Object.entries(FIELD_LABELS).map(([k, v]) => [v.toLowerCase(), k]));
+    const extra = { 'first name': 'name', 'e-mail': 'email', 'e-mail address': 'email', mobile: 'mobile', 'mobile phone': 'mobile', phone: 'tel', 'business phone': 'tel',
+      company: 'company', 'job title': 'title', 'title': 'title', 'business fax': 'fax', 'web page': 'website', 'notes': 'notes', 'categories': 'tags', 'address': 'address' };
+    const keys = rows[0].map(h => { const x = h.trim().toLowerCase(); return byLabel[x] || (FIELD_LABELS[h.trim()] ? h.trim() : extra[x]) || null; });
+    return rows.slice(1).map(r => {
+      const c = { tags: [] };
+      keys.forEach((k, i) => { const v = (r[i] || '').trim(); if (!k || !v) return; if (k === 'tags') c.tags = splitTags(v); else c[k] = c[k] ? c[k] + ' / ' + v : v; });
+      return c;
+    }).filter(c => c.name || c.company || c.email || c.mobile || c.tel);
+  }
+  function vcfToCards(text) {
+    const out = [];
+    const lines = text.replace(/\r\n[ \t]/g, '').replace(/\n[ \t]/g, '').split(/\r?\n/);
+    let c = null;
+    const un = s => s.replace(/\\n/gi, '\n').replace(/\\([,;\\])/g, '$1');
+    for (const line of lines) {
+      const m = line.match(/^([^:]+):(.*)$/); if (!m) continue;
+      const [prop, ...params] = m[1].split(';'); const P = prop.toUpperCase().replace(/^ITEM\d+\./, ''); const ps = params.join(';').toUpperCase(); const v = m[2];
+      if (P === 'BEGIN') c = { tags: [] };
+      else if (!c) continue;
+      else if (P === 'END') { if (c.name || c.company || c.email || c.mobile || c.tel) out.push(c); c = null; }
+      else if (P === 'FN') c.name = un(v);
+      else if (P === 'N' && !c.name) { const [fam, giv] = v.split(';'); c.name = /[\u3400-\u9fff]/.test(fam + giv) ? un(fam + giv) : un(`${giv} ${fam}`).trim(); }
+      else if (P === 'ORG') { const [o, d] = v.split(/(?<!\\);/); c.company = un(o || ''); if (d) c.department = un(d); }
+      else if (P === 'TITLE') c.title = un(v);
+      else if (P === 'TEL') { const k = /FAX/.test(ps) ? 'fax' : /CELL|MOBILE|IPHONE/.test(ps) ? 'mobile' : 'tel'; c[k] = c[k] ? c[k] + ' / ' + v : v; }
+      else if (P === 'EMAIL') c.email = c.email ? c.email + ' / ' + v : v;
+      else if (P === 'URL') c.website = v;
+      else if (P === 'ADR') c.address = un(v.split(/(?<!\\);/).filter(Boolean).join(' '));
+      else if (P === 'NOTE') c.notes = un(v);
+      else if (P === 'CATEGORIES') c.tags = splitTags(un(v));
+    }
+    return out;
+  }
+  async function importFile(file) {
+    const text = await file.text();
+    let list = [], images = new Map();
+    try {
+      if (/\.json$/i.test(file.name) || /^\s*\{/.test(text)) {
+        const data = JSON.parse(text);
+        list = Array.isArray(data) ? data : data.cards || [];
+        for (const [id, url] of Object.entries(data.images || {})) images.set(id, await (await fetch(url)).blob());
+      } else if (/BEGIN:VCARD/i.test(text)) list = vcfToCards(text);
+      else list = csvToCards(text);
+    } catch (e) { toast('無法讀取檔案:' + e.message, 5000); return; }
+    if (!list.length) { toast('檔案裡沒有可匯入的名片'); return; }
+    const now = Date.now();
+    list = list.map(c => ({ ...c, id: c.id || Store.newId(), tags: c.tags || [], createdAt: c.createdAt || now, updatedAt: c.updatedAt || now, hasImage: !!(c.hasImage && images.has(c.id)) }));
+    const existing = new Set(cards.map(c => c.id));
+    const overwrite = list.filter(c => existing.has(c.id)).length;
+    if (overwrite && !confirm(`其中 ${overwrite} 張和名片庫中的名片相同(同一份備份),要以檔案內容覆蓋嗎?`)) list = list.filter(c => !existing.has(c.id));
+    for (const c of list) dropThumb(c.id);
+    await Store.putMany(list, images);
+    await refresh();
+    toast(`已匯入 ${list.length} 張名片`);
+  }
+
+  /* ---------- 示範資料(虛構) ---------- */
+  const DEMO = [
+    { name: '林雅婷', nameEn: 'Ya-Ting Lin', company: '星河光電股份有限公司', department: '採購部', title: '資深採購專員', mobile: '0912-345-678', tel: '03-578-1234 #215', email: 'yating.lin@galaxy-opto.example', address: '新竹市東區園區二路 18 號', tags: ['客戶', '面板'], notes: '2026 半導體展認識,關心 ITO 靶交期' },
+    { name: '陳建宏', company: '宏碩真空設備有限公司', title: '業務經理', mobile: '0928-111-222', tel: '06-505-0001', fax: '06-505-0002', email: 'kh.chen@hongshuo-vac.example', website: 'www.hongshuo-vac.example', address: '台南市新市區南科三路 9 號', tags: ['供應商', '設備'] },
+    { name: 'Emily Carter', company: 'Northwind Materials Inc.', title: 'Director of Sales, APAC', mobile: '+1 (415) 555-0134', email: 'emily.carter@northwind.example', address: '500 Market Street, Suite 12, San Francisco, CA', tags: ['海外', '客戶'] },
+    { name: '王志明', company: '晶達半導體股份有限公司', department: '製程整合處', title: '副理', tel: '03-563-6688 #7721', email: 'cmwang@jingda-semi.example', taxId: '24681357', tags: ['客戶', '半導體'], favorite: true, notes: '簡稱晶達,PVD 製程窗口' },
+    { name: '佐藤健', nameEn: 'Ken Sato', company: '株式会社サンプル金属', title: '営業部 課長', tel: '+81-3-1234-5678', email: 'k.sato@sample-kinzoku.example', tags: ['日本', '供應商'] },
+    { name: '張簡美玲', company: '鈺豐貿易有限公司', title: '負責人', mobile: '0933-246-810', lineId: 'meiling.trade', email: 'meiling@yufeng-trade.example', address: '台中市西屯區工業區一路 100 號 5 樓', tags: ['代理商'] },
+    { name: '李國華', company: '清研材料研究所', department: '薄膜實驗室', title: '研究員', tel: '03-591-0000 #33', email: 'kh.lee@tsing-lab.example', tags: ['學研'] },
+    { name: 'Daniel Kim', nameEn: 'Daniel Kim', company: 'Hanbit Display Co., Ltd.', title: 'Purchasing Manager', mobile: '+82-10-2345-6789', email: 'daniel.kim@hanbit.example', tags: ['海外', '面板', '客戶'] },
+  ];
+  async function loadDemo() {
+    const base = Date.now() - 86400000 * 120;
+    const list = DEMO.map((c, i) => ({ ...c, id: Store.newId(), createdAt: base + i * 86400000 * 17, updatedAt: base + i * 86400000 * 17, demo: true }));
+    await Store.putMany(list);
+    await refresh();
+    toast('已載入 8 張虛構的示範名片,可在設定中清除');
+  }
+
+  /* ---------- 設定 ---------- */
+  async function openSettings() {
+    const f = $('#dlg-settings form');
+    f.elements.engine.value = settings.engine; f.elements.langs.value = settings.langs;
+    f.elements.apiKey.value = settings.apiKey; f.elements.model.value = settings.model;
+    const est = await Store.estimate();
+    $('#set-storage').textContent = `名片 ${cards.length} 張` + (est ? `,已使用約 ${(est.usage / 1048576).toFixed(1)} MB` : '') +
+      '。資料只存在這台裝置的瀏覽器,清除瀏覽資料會一併刪除,請定期「完整備份」。';
+    $('#dlg-settings').showModal();
+  }
+
+  /* ---------- 事件 ---------- */
+  function bind() {
+    const q = $('#q');
+    let t;
+    q.addEventListener('input', () => { clearTimeout(t); t = setTimeout(render, 60); });
+    $('#q-clear').onclick = () => { q.value = ''; render(); q.focus(); };
+    $('#group-mode').onclick = e => { const b = e.target.closest('button'); if (!b) return; settings.mode = b.dataset.mode; saveSettings(); render(); scrollTo({ top: 0 }); };
+    $('#chips').onclick = e => {
+      const b = e.target.closest('.chip'); if (!b) return;
+      if (b.dataset.chip) filters[b.dataset.chip] = !filters[b.dataset.chip];
+      else { const tg = b.dataset.tag; filters.tags.has(tg) ? filters.tags.delete(tg) : filters.tags.add(tg); }
+      render();
+    };
+    $('#main').addEventListener('click', e => {
+      const c = e.target.closest('.card');
+      if (c) { const card = cards.find(x => x.id === c.dataset.id); if (card) { sel = +c.dataset.i; markSel(false); openCard(card); } return; }
+      const a = e.target.closest('[data-act]'); if (a) act(a.dataset.act);
+    });
+    $('#rail').addEventListener('click', e => { const b = e.target.closest('button'); if (b) jumpTo(b.dataset.key); });
+    $('#btn-scan').onclick = () => act('scan');
+    $('#btn-new').onclick = () => openEditor({ tags: [] }, { isNew: true });
+    $('#file-scan').onchange = e => { scanFiles(e.target.files); e.target.value = ''; };
+    $('#file-import').onchange = e => { if (e.target.files[0]) importFile(e.target.files[0]); e.target.value = ''; };
+    const menu = $('#menu');
+    $('#btn-menu').onclick = e => { e.stopPropagation(); const o = !menu.classList.contains('open'); menu.classList.toggle('open', o); $('#btn-menu').setAttribute('aria-expanded', String(o)); };
+    document.addEventListener('click', e => { if (!menu.contains(e.target)) menu.classList.remove('open'); });
+    $('.menu-list').onclick = e => { const b = e.target.closest('[data-act]'); if (b) { menu.classList.remove('open'); act(b.dataset.act); } };
+
+    // 對話框
+    $$('dialog [data-close]').forEach(b => (b.onclick = () => b.closest('dialog').close()));
+    $('#dlg-edit').addEventListener('close', () => { if (ed.url) { URL.revokeObjectURL(ed.url); ed.url = null; } });
+    $('#edit-form').addEventListener('submit', e => { e.preventDefault(); saveEditor(); });
+    $('#edit-fav').onclick = () => setFav(!ed.card.favorite);
+    $('#edit-rotate').onclick = rotateImage;
+    $('#edit-reocr').onclick = () => reOcr();
+    $('#edit-photo').onclick = () => {
+      const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+      inp.onchange = () => inp.files[0] && reOcr(inp.files[0]); inp.click();
+    };
+    $('#edit-shot').onclick = e => { if (e.target.tagName === 'IMG') { $('#zoom img').src = e.target.src; $('#zoom').classList.add('on'); } };
+    $('#zoom').onclick = () => $('#zoom').classList.remove('on');
+    $('#edit-delete').onclick = async () => {
+      if (!confirm(`確定刪除「${ed.card.name || ed.card.company || '這張名片'}」?`)) return;
+      await Store.deleteCard(ed.card.id); dropThumb(ed.card.id);
+      $('#dlg-edit').close(); await refresh(); toast('已刪除');
+    };
+    $('#edit-vcf').onclick = () => { const c = readForm(); download(toVcard(c), `${c.name || c.company || 'card'}.vcf`, 'text/vcard'); };
+    $('#edit-fields').addEventListener('input', e => { e.target.classList.remove('ocr-hit'); renderQuick(readForm()); });
+
+    const sf = $('#dlg-settings form');
+    sf.addEventListener('submit', e => {
+      e.preventDefault();
+      settings.engine = sf.elements.engine.value || 'tesseract'; settings.langs = sf.elements.langs.value;
+      settings.apiKey = sf.elements.apiKey.value.trim(); settings.model = sf.elements.model.value;
+      if (settings.engine === 'claude' && !settings.apiKey) { toast('使用 Claude 需要輸入 API 金鑰'); return; }
+      saveSettings(); $('#dlg-settings').close(); toast('設定已儲存');
+    });
+    $('#set-persist').onclick = async () => toast((await Store.persist()) ? '瀏覽器已同意永久保存,不會因空間不足自動清除' : '瀏覽器未同意(可把網頁加入主畫面後再試)', 4000);
+    $('#set-demo').onclick = async () => { $('#dlg-settings').close(); await loadDemo(); };
+    $('#set-clear').onclick = async () => {
+      if (!confirm(`確定刪除全部 ${cards.length} 張名片?此動作無法復原,建議先「完整備份」。`)) return;
+      await Store.clearAll(); thumbs.forEach(u => URL.revokeObjectURL(u)); thumbs.clear();
+      $('#dlg-settings').close(); await refresh(); toast('已清除');
+    };
+
+    // 拖放與貼上
+    let dragN = 0;
+    addEventListener('dragenter', e => { if ([...(e.dataTransfer && e.dataTransfer.types || [])].includes('Files')) { dragN++; document.body.classList.add('dragging'); } });
+    addEventListener('dragleave', () => { if (--dragN <= 0) { dragN = 0; document.body.classList.remove('dragging'); } });
+    addEventListener('dragover', e => e.preventDefault());
+    addEventListener('drop', e => { e.preventDefault(); dragN = 0; document.body.classList.remove('dragging'); if (e.dataTransfer.files.length) scanFiles(e.dataTransfer.files); });
+    addEventListener('paste', e => {
+      if (document.querySelector('dialog[open]')) return;
+      const files = [...(e.clipboardData && e.clipboardData.files || [])].filter(f => /^image\//.test(f.type));
+      if (files.length) { e.preventDefault(); scanFiles(files); }
+    });
+
+    // 表頭高度 → 分組標題黏附位置
+    const setHdr = () => document.documentElement.style.setProperty('--hdr', $('#top').offsetHeight + 'px');
+    setHdr();
+    if ('ResizeObserver' in self) new ResizeObserver(setHdr).observe($('#top'));
+    addEventListener('resize', () => renderRail(railGroups()));
+  }
+  function railGroups() {
+    return $('#q').value.trim() ? [] : $$('.group').map(s => ({ key: s.dataset.key }));
+  }
+
+  function act(a) {
+    if (a === 'scan') $('#file-scan').click();
+    else if (a === 'import') $('#file-import').click();
+    else if (a === 'demo') loadDemo();
+    else if (a === 'settings') openSettings();
+    else if (a === 'export-csv' || a === 'export-vcf' || a === 'export-json') {
+      if (!cards.length) { toast('名片庫是空的'); return; }
+      const list = results.length && ($('#q').value.trim() || filters.tags.size || filters.review || filters.fav) ? results : cards;
+      const scope = list === cards ? '全部' : `目前篩選的 ${list.length} 張`;
+      if (a === 'export-csv') download(toCsv(list), `名片庫-${today()}.csv`, 'text/csv;charset=utf-8');
+      else if (a === 'export-vcf') download(list.map(toVcard).join('\r\n'), `名片庫-${today()}.vcf`, 'text/vcard;charset=utf-8');
+      else exportJson();
+      toast(a === 'export-json' ? '已產生完整備份' : `已匯出${scope}`);
+    }
+  }
+
+  // 給測試與除錯用
+  self.CardApp = { toCsv, toVcard, csvToCards, vcfToCards, mergeInto, findDuplicate: c => findDuplicate(c), refresh };
+
+  bind(); setupRail(); setupKeys();
+  refresh();
+})();
+</script>
+</body>
+</html>

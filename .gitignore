@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+# 名片備份含個人資料,不要 commit
+名片庫備份-*.json
+名片庫-*.csv
+名片庫-*.vcf
