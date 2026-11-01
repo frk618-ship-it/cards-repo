@@ -2,9 +2,9 @@ name: 測試名片庫
 
 on:
   push:
-    branches: [main, cards-main]
+    branches: [main]
   pull_request:
-    branches: [main, cards-main]
+    branches: [main]
   workflow_dispatch:
 
 permissions:

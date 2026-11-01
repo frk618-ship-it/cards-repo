@@ -86,6 +86,41 @@
     return words.length >= 2 && words.length <= 4 && words.every(w => /^[A-Z]/.test(w) || /^[a-z]{1,3}$/.test(w));
   }
 
+  /* ---------- OCR 常見誤認的修正 ---------- */
+  // 行尾 1–2 個英文字母的雜訊(大字姓名旁常被多辨識出「Mg」「jg」)
+  function cleanNoise(l) {
+    return l.replace(new RegExp('([' + CJK + '])\\s+[A-Za-z]{1,2}$'), '$1').replace(/^[A-Za-z]{1,2}\s+(?=[\u3400-\u9fff])/, '').trim();
+  }
+  // 號碼中的英文字母誤認:O→0、I/l/|→1、S→5、B→8(前後是數字時)
+  function fixDigits(s) {
+    if ((s.match(/\d/g) || []).length < 5) return s;
+    return s.replace(/(?<=[\d\s\-().])[Oo](?=[\d\s\-().])|(?<=[\d\-])[Oo]|[Oo](?=\d)/g, '0')
+      .replace(/(?<=\d)[Il|!](?=\d)|(?<=[\d\-])[Il|](?=[\d\-])/g, '1')
+      .replace(/(?<=\d)S(?=\d)/g, '5').replace(/(?<=\d)B(?=\d)/g, '8');
+  }
+  function fixEmail(s) {
+    return s.replace(/[©®]|\(at\)|\[at\]/gi, '@').replace(/\s*@\s*/g, '@').replace(/\s*\.\s*(?=[a-z]{2,}\b)/gi, '.')
+      .replace(/\.(conm|corn|c0m|cotn|comn|cam|con)(?=\.|\b|$)/gi, '.com').replace(/\.c0(?=\.)/gi, '.co');
+  }
+  // 「@」常被誤認成「e@」:若去掉 e 後正好是英文姓名的結尾,就去掉
+  function fixEmailName(email, nameEn) {
+    const m = email.match(/^(.+)e@(.+)$/);
+    if (!m || !nameEn) return email;
+    const last = nameEn.toLowerCase().split(/\s+/).filter(Boolean).pop() || '';
+    return last && m[1].endsWith(last) ? m[1] + '@' + m[2] : email;
+  }
+  function fixCompany(s) {
+    return s.replace(/股份有.公司/, '股份有限公司').replace(/股.有限公司/, '股份有限公司').replace(/(?<!股份)有[^限]公司$/, '有限公司');
+  }
+  const TITLE_TAIL = ['專員', '經理', '副理', '協理', '襄理', '處長', '課長', '組長', '主任', '總監', '董事', '顧問', '秘書', '助理', '廠長', '部長', '科長', '技師', '店長'];
+  function fixTitle(s) {
+    const t = s.replace(/\s+$/, '');
+    const tail = t.slice(-2);
+    if (!/^[\u3400-\u9fff]{2}$/.test(tail) || TITLE_TAIL.includes(tail) || TITLE_RE.test(tail)) return s;
+    const cand = TITLE_TAIL.filter(w => w[1] === tail[1] || w[0] === tail[0]);
+    return cand.length === 1 ? t.slice(0, -2) + cand[0] : s;
+  }
+
   /** 解析名片文字。回傳 {fields, unmatched}:fields 是各欄位字串,unmatched 是沒歸類的行。 */
   function parseCardText(text) {
     const fields = {};
@@ -101,14 +136,15 @@
     const lines = toHalfWidth(text).split(/\r?\n|[ \t]{3,}/)
       .map(l => l.replace(/[|¦]/g, ' ').replace(/\s+/g, ' ').trim())
       .map(l => (spacedOut(l) ? l.replace(joinCJK, '$1') : l))
-      .filter(l => l.length > 1);
+      .map(cleanNoise)
+      .filter(l => (l.length > 1 || /^(號|樓|室)$/.test(l)) && !/^[^\w\u3400-\u9fff]+$/.test(l));
     const pending = []; // 先處理有明確格式的,剩下的再判斷姓名/公司/職稱
 
     for (const raw of lines) {
       for (let seg of splitLabeled(raw)) {
         let handled = false;
         // Email(OCR 常在 @ 兩側多出空白)
-        const emailSeg = seg.replace(/\s*@\s*/g, '@').replace(/\s*\.\s*(?=[a-z]{2,}\b)/gi, '.');
+        const emailSeg = fixEmail(seg);
         const em = emailSeg.match(EMAIL_RE);
         if (em) { addTo(fields, 'email', em[0].toLowerCase()); seg = emailSeg.replace(em[0], '').replace(LABELS.email, '').trim(); handled = !seg || seg.length < 3; if (handled) continue; }
 
@@ -117,7 +153,7 @@
 
         let label = null;
         for (const k of ['mobile', 'fax', 'tel']) if (LABELS[k].test(seg)) { label = k; break; }
-        const body = label ? seg.replace(LABELS[label], '') : seg;
+        const body = fixDigits(label ? seg.replace(LABELS[label], '') : seg);
         const ph = body.match(PHONE_RE);
         const digits = ph ? phoneDigits(ph[1]) : '';
         if (ph && digits.length >= 7 && digits.length <= 15 && (label || ph[0].length >= body.replace(/\s/g, '').length * 0.6)) {
@@ -142,6 +178,14 @@
 
     for (const seg of pending) {
       const compact = seg.replace(/\s+/g, '');
+      // 地址被拆成兩行(「…三路 9」+「號」或「…路」+「18 號 3 樓」)
+      if (/^[\d\s\-之]*(號|樓|室|F)/.test(compact) && compact.length <= 10 && /[\u3400-\u9fff]/.test(compact)) {
+        const last = fields.address ? fields.address.split(' / ').pop() : '';
+        if (last && !/(號|樓|室)$/.test(last.replace(/\s+/g, ''))) { fields.address = fields.address + (/\d$/.test(last) ? ' ' : '') + seg; continue; }
+      }
+      if (!fields.address && /^[\u3400-\u9fff]{2,4}(市|縣)/.test(compact) && (compact.match(new RegExp(ADDR_RE.source, 'g')) || []).length >= 3 && !COMPANY_RE.test(compact)) {
+        fields.address = seg; continue;
+      }
       if (COMPANY_RE.test(seg) && !(TITLE_RE.test(seg) && seg.length <= 8)) {
         // 公司名常帶英文名,中文優先
         if (!fields.company || (!reCJK.test(fields.company) && reCJK.test(seg))) fields.company = fields.company && !reCJK.test(seg) ? fields.company : seg;
@@ -168,6 +212,9 @@
       unmatched.push(seg);
     }
 
+    if (fields.company) fields.company = fixCompany(fields.company);
+    if (fields.title) fields.title = fixTitle(fields.title);
+    if (fields.email) fields.email = fields.email.split(' / ').map(e => fixEmailName(e, fields.nameEn || (/^[a-z ]+$/i.test(fields.name || '') ? fields.name : ''))).join(' / ');
     // 沒抓到中文姓名時,用英文名
     if (!fields.name && fields.nameEn) { fields.name = fields.nameEn; delete fields.nameEn; }
     if (!fields.company && fields.companyEn) { fields.company = fields.companyEn; delete fields.companyEn; }

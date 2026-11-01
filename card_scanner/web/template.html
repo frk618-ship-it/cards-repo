@@ -27,46 +27,71 @@
   <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></symbol>
   <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
   <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></symbol>
+  <symbol id="i-flash" viewBox="0 0 24 24"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></symbol>
+  <symbol id="i-stack" viewBox="0 0 24 24"><rect x="4" y="8" width="13" height="12" rx="2"/><path d="M8 4h10a2 2 0 0 1 2 2v10"/></symbol>
+  <symbol id="i-portrait" viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M4 9l-2 3 2 3M20 9l2 3-2 3"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
 </svg>
 
 <header class="top" id="top">
   <div class="top-in">
     <div class="brand-row">
       <div class="brand"><h1>名片庫</h1><span class="count" id="count"></span></div>
-      <button class="btn primary" id="btn-scan" type="button" title="拍照或選擇名片照片(可多選)"><svg class="i"><use href="#i-camera"/></svg><span class="lbl">掃描名片</span></button>
-      <button class="btn" id="btn-new" type="button" title="手動新增"><svg class="i"><use href="#i-card"/></svg><span class="lbl">手動新增</span></button>
+      <button class="btn primary desk-only" id="btn-scan" type="button" title="選擇名片照片(可多選),或直接把照片拖進視窗"><svg class="i"><use href="#i-image"/></svg><span class="lbl">匯入名片照片</span></button>
+      <button class="btn desk-only" id="btn-cam" type="button" title="用電腦或手機的相機拍名片" hidden><svg class="i"><use href="#i-camera"/></svg><span class="lbl">相機</span></button>
+      <button class="btn" id="btn-new" type="button" title="手動新增"><svg class="i"><use href="#i-plus"/></svg><span class="lbl">手動新增</span></button>
       <div class="menu" id="menu">
         <button class="btn icon-btn" id="btn-menu" type="button" aria-haspopup="true" aria-expanded="false" aria-label="更多功能"><svg class="i"><use href="#i-more"/></svg></button>
         <div class="menu-list" role="menu">
+          <button type="button" data-act="scan-file" role="menuitem"><svg class="i"><use href="#i-image"/></svg>從相簿 / 檔案匯入照片</button>
+          <hr>
           <button type="button" data-act="export-csv" role="menuitem"><svg class="i"><use href="#i-down"/></svg>匯出 Excel(CSV)</button>
           <button type="button" data-act="export-vcf" role="menuitem"><svg class="i"><use href="#i-down"/></svg>匯出通訊錄(vCard)</button>
           <button type="button" data-act="export-json" role="menuitem"><svg class="i"><use href="#i-down"/></svg>完整備份(JSON,含圖片)</button>
           <button type="button" data-act="import" role="menuitem"><svg class="i"><use href="#i-up"/></svg>匯入(JSON / CSV / vCard)</button>
           <hr>
-          <button type="button" data-act="settings" role="menuitem"><svg class="i"><use href="#i-gear"/></svg>設定與 OCR 引擎</button>
+          <button type="button" data-act="settings" role="menuitem"><svg class="i"><use href="#i-gear"/></svg>設定</button>
         </div>
       </div>
     </div>
     <div class="search" id="search-box">
       <svg class="i"><use href="#i-search"/></svg>
-      <input id="q" type="search" autocomplete="off" enterkeyhint="search" placeholder="搜尋姓名、公司、職稱、電話末碼、Email…" aria-label="搜尋名片">
-      <kbd>/</kbd>
+      <input id="q" type="search" autocomplete="off" enterkeyhint="search" placeholder="搜尋姓名、公司、電話末碼、Email…" aria-label="搜尋名片">
+      <kbd class="desk-only">/</kbd>
       <button class="clear" type="button" id="q-clear" aria-label="清除搜尋"><svg class="i"><use href="#i-x"/></svg></button>
     </div>
     <div class="toolbar">
       <div class="seg" role="group" aria-label="索引方式" id="group-mode">
-        <button type="button" data-mode="name">姓名</button><button type="button" data-mode="company">公司</button><button type="button" data-mode="tag">標籤</button><button type="button" data-mode="month">建檔月份</button>
+        <button type="button" data-mode="name">姓名</button><button type="button" data-mode="company">公司</button><button type="button" data-mode="tag">標籤</button><button type="button" data-mode="month">月份</button>
       </div>
       <div class="chips" id="chips"></div>
       <span class="result-info" id="result-info"></span>
     </div>
-    <div class="hint">進階搜尋:<code>公司:鑫科</code> <code>#客戶</code> <code>電話:5678</code> <code>-離職</code> <code>"sales manager"</code> · 方向鍵選擇、Enter 開啟</div>
+    <div class="hint desk-only">進階搜尋:<code>公司:鑫科</code> <code>#客戶</code> <code>電話:5678</code> <code>-離職</code> <code>"sales manager"</code> · ↑↓ 選擇、Enter 編輯、Esc 清除</div>
   </div>
 </header>
 
-<main id="main" aria-live="polite"></main>
-<nav class="rail" id="rail" aria-label="快速索引"></nav>
+<div class="layout" id="layout">
+  <div class="list-col">
+    <main id="main" aria-live="polite"></main>
+    <nav class="rail" id="rail" aria-label="快速索引"></nav>
+  </div>
+  <aside class="pane" id="pane" aria-label="名片內容">
+    <div class="pane-empty" id="pane-empty">
+      <svg class="i big"><use href="#i-card"/></svg>
+      <p>選擇左側的名片查看與編輯</p>
+      <p class="hint">或把名片照片拖曳到視窗中、按 Ctrl+V 貼上,即可辨識建檔</p>
+    </div>
+  </aside>
+</div>
 <div class="rail-pop" id="rail-pop" aria-hidden="true"></div>
+
+<nav class="bottombar mob-only" aria-label="掃描">
+  <button type="button" class="fab" id="bb-scan"><svg class="i"><use href="#i-camera"/></svg>掃描名片</button>
+</nav>
+
 <div class="queue" id="queue" aria-live="polite"></div>
 <div class="toast" id="toast" role="status"></div>
 <div class="drop" id="drop">放開以辨識名片</div>
@@ -76,21 +101,24 @@
 
 <dialog id="dlg-edit" aria-labelledby="edit-title">
   <form method="dialog" id="edit-form">
-    <div class="dlg-head"><h2 id="edit-title" tabindex="-1" autofocus>名片</h2>
+    <div class="dlg-head">
+      <button type="button" class="btn ghost icon-btn mob-only" data-close aria-label="返回"><svg class="i"><use href="#i-back"/></svg></button>
+      <h2 id="edit-title" tabindex="-1" autofocus>名片</h2>
       <button type="button" class="btn ghost" id="edit-fav" aria-pressed="false" title="加星號">☆</button>
-      <button type="button" class="btn ghost icon-btn" data-close aria-label="關閉"><svg class="i"><use href="#i-x"/></svg></button></div>
+      <button type="button" class="btn ghost icon-btn desk-only" data-close aria-label="關閉"><svg class="i"><use href="#i-x"/></svg></button>
+    </div>
     <div class="dlg-body">
       <div id="edit-notice"></div>
       <div class="editor">
-        <div>
+        <div class="shot-col">
           <div class="shot" id="edit-shot"><div class="none">沒有名片圖片</div></div>
           <div class="shot-tools">
             <button type="button" class="btn" id="edit-rotate"><svg class="i"><use href="#i-rotate"/></svg>旋轉</button>
             <button type="button" class="btn" id="edit-reocr"><svg class="i"><use href="#i-scan"/></svg>重新辨識</button>
             <button type="button" class="btn" id="edit-photo"><svg class="i"><use href="#i-camera"/></svg>換照片</button>
           </div>
-          <details class="raw" id="edit-raw-wrap"><summary>辨識原文</summary><pre id="edit-raw"></pre></details>
           <div class="quick" id="edit-quick"></div>
+          <details class="raw" id="edit-raw-wrap"><summary>辨識原文</summary><pre id="edit-raw"></pre></details>
         </div>
         <div class="form" id="edit-fields">
           <label>姓名<input name="name" autocomplete="off"></label>
@@ -99,13 +127,13 @@
           <label class="wide">公司英文名<input name="companyEn" autocomplete="off"></label>
           <label>部門<input name="department" autocomplete="off"></label>
           <label>職稱<input name="title" autocomplete="off"></label>
-          <label>手機<input name="mobile" inputmode="tel" autocomplete="off"></label>
-          <label>電話<input name="tel" inputmode="tel" autocomplete="off"></label>
-          <label>傳真<input name="fax" inputmode="tel" autocomplete="off"></label>
-          <label>Email<input name="email" inputmode="email" autocomplete="off"></label>
-          <label>網站<input name="website" inputmode="url" autocomplete="off"></label>
+          <label>手機<input name="mobile" type="tel" autocomplete="off"></label>
+          <label>電話<input name="tel" type="tel" autocomplete="off"></label>
+          <label>傳真<input name="fax" type="tel" autocomplete="off"></label>
+          <label>Email<input name="email" type="email" autocomplete="off" autocapitalize="off"></label>
+          <label>網站<input name="website" inputmode="url" autocomplete="off" autocapitalize="off"></label>
           <label>統一編號<input name="taxId" inputmode="numeric" autocomplete="off"></label>
-          <label>LINE ID<input name="lineId" autocomplete="off"></label>
+          <label>LINE ID<input name="lineId" autocomplete="off" autocapitalize="off"></label>
           <label class="wide">地址<input name="address" autocomplete="off"></label>
           <label class="wide">標籤(以逗號分隔,例如:客戶, 供應商, 2026 展覽)<input name="tags" autocomplete="off" list="dl-tags"></label>
           <label class="wide">備註(認識場合、簡稱、待辦…)<textarea name="notes"></textarea></label>
@@ -113,29 +141,53 @@
       </div>
     </div>
     <div class="dlg-foot">
-      <div class="left"><button type="button" class="btn danger" id="edit-delete"><svg class="i"><use href="#i-trash"/></svg>刪除</button>
-        <button type="button" class="btn" id="edit-vcf"><svg class="i"><use href="#i-down"/></svg>vCard</button></div>
-      <button type="button" class="btn" data-close>取消</button>
+      <div class="left"><button type="button" class="btn danger" id="edit-delete"><svg class="i"><use href="#i-trash"/></svg><span class="lbl">刪除</span></button>
+        <button type="button" class="btn" id="edit-vcf"><svg class="i"><use href="#i-down"/></svg><span class="lbl">vCard</span></button></div>
+      <button type="button" class="btn desk-only" data-close>取消</button>
       <button type="submit" class="btn primary" id="edit-save" value="save">儲存</button>
     </div>
   </form>
 </dialog>
 <datalist id="dl-company"></datalist><datalist id="dl-tags"></datalist>
 
+<dialog id="dlg-cam" class="cam" aria-label="拍攝名片">
+  <div class="cam-view">
+    <video id="cam-video" playsinline muted autoplay></video>
+    <div class="cam-frame" id="cam-frame"><span></span></div>
+    <div class="cam-tip" id="cam-tip">把名片放進框內,平放、避免反光</div>
+    <div class="cam-shots" id="cam-shots"></div>
+  </div>
+  <div class="cam-bar">
+    <button type="button" class="cam-btn" id="cam-close" aria-label="關閉相機"><svg class="i"><use href="#i-x"/></svg><span>關閉</span></button>
+    <button type="button" class="cam-btn" id="cam-file" aria-label="從相簿選擇"><svg class="i"><use href="#i-image"/></svg><span>相簿</span></button>
+    <button type="button" class="shutter" id="cam-shoot" aria-label="拍攝"></button>
+    <button type="button" class="cam-btn" id="cam-burst" aria-pressed="false" aria-label="連拍多張"><svg class="i"><use href="#i-stack"/></svg><span>連拍</span></button>
+    <button type="button" class="cam-btn" id="cam-orient" aria-pressed="false" aria-label="直式名片"><svg class="i"><use href="#i-portrait"/></svg><span>直式</span></button>
+    <button type="button" class="cam-btn" id="cam-torch" aria-pressed="false" aria-label="補光燈" hidden><svg class="i"><use href="#i-flash"/></svg><span>補光</span></button>
+    <button type="button" class="cam-done" id="cam-done" hidden>完成 <b id="cam-count">0</b></button>
+  </div>
+</dialog>
+
 <dialog id="dlg-settings" class="small" aria-labelledby="set-title">
   <form method="dialog" class="set-form">
     <div class="dlg-head"><h2 id="set-title" tabindex="-1" autofocus>設定</h2><button type="button" class="btn ghost icon-btn" data-close aria-label="關閉"><svg class="i"><use href="#i-x"/></svg></button></div>
     <div class="dlg-body set">
-      <fieldset><legend>OCR 引擎</legend>
-        <label class="radio"><input type="radio" name="engine" value="tesseract"><span>本機辨識(Tesseract)<small>免費、照片不離開裝置。第一次使用需下載約 20 MB 語言檔;對手寫、藝術字、彎曲或反光的名片較弱。</small></span></label>
-        <label class="radio"><input type="radio" name="engine" value="claude"><span>Claude 視覺辨識<small>準確度高,直接判斷欄位;照片會傳送到 Anthropic API,依用量計費,需要自己的 API 金鑰。</small></span></label>
+      <fieldset><legend>畫面</legend>
+        <label class="f">版面<select name="layout">
+          <option value="auto">自動(依螢幕寬度切換)</option><option value="desktop">電腦版(清單 + 右側編輯)</option><option value="mobile">手機版(單欄、底部掃描鈕)</option>
+        </select></label>
       </fieldset>
-      <fieldset><legend>本機辨識語言</legend>
-        <select name="langs" aria-label="辨識語言">
+      <fieldset><legend>OCR 引擎</legend>
+        <label class="radio"><input type="radio" name="engine" value="tesseract"><span>本機辨識(Tesseract)<small>免費、照片不離開裝置。會自動裁切名片、拉正傾斜、判斷方向、去除陰影。第一次使用需下載約 20 MB 語言檔;對手寫、藝術字較弱。</small></span></label>
+        <label class="radio"><input type="radio" name="engine" value="claude"><span>Claude 視覺辨識<small>準確度最高,直接判斷欄位;照片會傳送到 Anthropic API,依用量計費,需要自己的 API 金鑰。失敗時自動改用本機辨識。</small></span></label>
+      </fieldset>
+      <fieldset><legend>本機辨識</legend>
+        <label class="f">語言<select name="langs" aria-label="辨識語言">
           <option value="chi_tra">繁體中文(含英數字,建議)</option><option value="chi_tra+eng">繁體中文 + 英文模型(英文為主的名片)</option>
           <option value="chi_sim">簡體中文(含英數字)</option>
           <option value="jpn+eng">日文 + 英文</option><option value="kor+eng">韓文 + 英文</option><option value="eng">英文</option>
-        </select>
+        </select></label>
+        <label class="radio"><input type="checkbox" name="autoCrop"><span>自動裁切與拉正<small>從照片中找出名片、裁掉桌面背景並修正傾斜。名片占滿整張照片時可關閉。</small></span></label>
       </fieldset>
       <fieldset><legend>Claude</legend>
         <label class="f">Anthropic API 金鑰<input name="apiKey" type="password" autocomplete="off" placeholder="sk-ant-…"></label>

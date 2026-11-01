@@ -108,3 +108,81 @@ test('splits two-column OCR lines on wide gaps', () => {
   assert.equal(f.title, '資深採購專員');
   assert.equal(f.tel, '03-578-1234 #215');
 });
+
+/* ---------- image analysis (imaging.js) ---------- */
+const IM = require(path.join(web, 'imaging.js'));
+
+// RGBA test image: a light card (rotated by `deg`) on a dark, slightly graded table
+function cardOnTable(W, H, cw, ch, deg) {
+  const rgba = new Uint8ClampedArray(W * H * 4), t = deg * Math.PI / 180, c = Math.cos(t), s = Math.sin(t);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const dx = x - W / 2, dy = y - H / 2, u = dx * c + dy * s, v = -dx * s + dy * c, i = (y * W + x) * 4;
+    const inside = Math.abs(u) < cw / 2 && Math.abs(v) < ch / 2;
+    const tone = inside ? 245 : 70 + (x / W) * 25;
+    rgba[i] = tone; rgba[i + 1] = inside ? 242 : tone - 10; rgba[i + 2] = inside ? 235 : tone - 20; rgba[i + 3] = 255;
+  }
+  return rgba;
+}
+
+test('detectCard finds a tilted card on a table and its angle', () => {
+  const r = IM.detectCard(cardOnTable(400, 300, 220, 133, 6), 400, 300);
+  assert.equal(r.found, true);
+  assert.ok(Math.abs(r.angle - 6) < 1.5, `angle ${r.angle}`);
+  assert.ok(r.box.w > 200 && r.box.w < 260, `box ${JSON.stringify(r.box)}`);
+});
+
+test('detectCard declines when the card fills the frame or the blob is not card-shaped', () => {
+  const full = new Uint8ClampedArray(300 * 200 * 4).fill(240);
+  assert.equal(IM.detectCard(full, 300, 200).found, false);
+  // a thin colour band (logo strip) is not a card
+  const band = cardOnTable(400, 300, 380, 30, 0);
+  assert.equal(IM.detectCard(band, 400, 300).found, false);
+});
+
+// grayscale "text lines": dark horizontal bars of short dashes on white, rotated by deg
+function textLines(W, H, deg, dark = 30, light = 240) {
+  const g = new Uint8ClampedArray(W * H).fill(light), t = deg * Math.PI / 180, c = Math.cos(t), s = Math.sin(t);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const dx = x - W / 2, dy = y - H / 2, u = dx * c + dy * s, v = -dx * s + dy * c;
+    if (Math.abs(u) < W * 0.4 && ((v + 1000) % 40) < 10 && ((u + 1000) % 14) < 9) g[y * W + x] = dark;
+  }
+  return g;
+}
+
+test('textSkew measures the tilt of text lines', () => {
+  assert.ok(Math.abs(IM.textSkew(textLines(500, 300, 0), 500, 300)) <= 0.3);
+  const a = IM.textSkew(textLines(500, 300, 4), 500, 300);
+  assert.ok(Math.abs(a + 4) < 0.6 || Math.abs(a - 4) < 0.6, `skew ${a}`); // sign follows the rotation convention
+  assert.ok(Math.abs(Math.abs(a) - 4) < 0.6);
+});
+
+test('normalizeLighting turns white-on-dark into dark-on-white and removes a shadow gradient', () => {
+  const W = 480, H = 240;
+  // left half: dark text on white with a strong shadow towards the right edge; right half: white text on navy
+  const g = new Uint8ClampedArray(W * H);
+  const txt = textLines(W, H, 0, 1, 0); // 1 where text
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const i = y * W + x, isText = txt[i] === 1;
+    if (x < W / 2) { const shade = 1 - 0.45 * (x / (W / 2)); g[i] = (isText ? 40 : 235) * shade; }
+    else g[i] = isText ? 235 : 45;
+  }
+  const out = IM.normalizeLighting(g, W, H);
+  const mean = (x0, x1, wantText) => { let s = 0, n = 0; for (let y = 0; y < H; y++) for (let x = x0; x < x1; x++) if ((txt[y * W + x] === 1) === wantText) { s += out[y * W + x]; n++; } return s / n; };
+  assert.ok(mean(10, 200, false) > 200, 'shadowed paper becomes white');
+  assert.ok(mean(10, 200, true) < 110, 'text stays dark');
+  assert.ok(mean(280, 470, false) > 200, 'navy background becomes white');
+  assert.ok(mean(280, 470, true) < 110, 'white text becomes dark');
+});
+
+/* ---------- OCR error corrections (parser.js) ---------- */
+test('fixes common OCR confusions', () => {
+  const f = P.parseCardText('宏碩真空設備有眼公司\n陳建宏 Mg\n資深採購事員\nM: O912-345-6l8\nkh.chen © hongshuo.conm\n台南市新市區南科三路 9\n號').fields;
+  assert.equal(f.company, '宏碩真空設備有限公司');
+  assert.equal(f.name, '陳建宏');
+  assert.equal(f.title, '資深採購專員');
+  assert.equal(f.mobile, '0912-345-618');
+  assert.equal(f.email, 'kh.chen@hongshuo.com');
+  assert.equal(f.address, '台南市新市區南科三路 9 號');
+  const e = P.parseCardText('Emily Carter\nemily.cartere@northwind.com\nACME Inc.').fields;
+  assert.equal(e.email, 'emily.carter@northwind.com');
+});

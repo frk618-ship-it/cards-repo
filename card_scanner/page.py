@@ -10,7 +10,7 @@ from pathlib import Path
 
 WEB = Path(__file__).with_name("web")
 # load order matters: app.js uses the globals the others define
-SCRIPTS = ["parser.js", "search.js", "store.js", "ocr.js", "app.js"]
+SCRIPTS = ["parser.js", "search.js", "store.js", "imaging.js", "ocr.js", "camera.js", "app.js"]
 
 
 def render_page() -> str:

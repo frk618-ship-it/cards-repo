@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   const { CardIndex, groupCards, highlight, escapeHtml, parseQuery } = self.CardSearch;
-  const Store = self.CardStore, OCR = self.CardOCR, Parser = self.CardParser;
+  const Store = self.CardStore, OCR = self.CardOCR, Camera = self.CardCamera;
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const esc = escapeHtml;
@@ -17,7 +17,7 @@
 
   /* ---------- 設定 ---------- */
   const SETTINGS_KEY = 'card-scanner-settings';
-  const settings = Object.assign({ engine: 'tesseract', langs: 'chi_tra', apiKey: '', model: 'claude-opus-5-5', mode: 'name' }, (() => {
+  const settings = Object.assign({ engine: 'tesseract', langs: 'chi_tra', apiKey: '', model: 'claude-opus-5-5', mode: 'name', layout: 'auto', autoCrop: true }, (() => {
     try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch (e) { return {}; }
   })());
   const saveSettings = () => { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) { /* 私密瀏覽 */ } };
@@ -45,6 +45,23 @@
   const splitMulti = s => String(s || '').split(/\s*\/\s*/).map(x => x.trim()).filter(Boolean);
   const splitTags = s => [...new Set(String(s || '').split(/[,，、;；]/).map(x => x.trim().replace(/^#/, '')).filter(Boolean))];
   const initial = c => ((c.name || c.company || '?').trim().charAt(0) || '?').toUpperCase();
+
+  /* ---------- 版面:電腦版(清單 + 右側編輯窗格)/ 手機版(單欄、全螢幕編輯、底部掃描鈕) ---------- */
+  const wideMq = matchMedia('(min-width: 900px)');
+  const isDesktop = () => document.documentElement.classList.contains('lay-desktop');
+  function applyLayout() {
+    const desk = settings.layout === 'desktop' || (settings.layout !== 'mobile' && wideMq.matches);
+    const root = document.documentElement;
+    if (root.classList.contains('lay-desktop') === desk && root.classList.contains('lay-mobile') === !desk) return;
+    root.classList.toggle('lay-desktop', desk); root.classList.toggle('lay-mobile', !desk);
+    const dlg = $('#dlg-edit'), wasOpen = dlg.open;
+    if (wasOpen) { ed.switching = true; dlg.close(); ed.switching = false; }
+    (desk ? $('#pane') : document.body).appendChild(dlg);
+    if (wasOpen) showEditor();
+    setHdr();
+    renderRail(railGroups());
+  }
+  function setHdr() { document.documentElement.style.setProperty('--hdr', $('#top').offsetHeight + 'px'); }
 
   /* ---------- 資料載入 ---------- */
   async function refresh() {
@@ -139,6 +156,7 @@
     sel = q && results.length ? 0 : -1;
     markSel(false);
     renderRail(q ? [] : groups);
+    markOpen();
     observeThumbs();
   }
 
@@ -206,17 +224,27 @@
     const el = $(`.card[data-i="${sel}"]`);
     if (el) { el.classList.add('sel'); if (scroll) el.scrollIntoView({ block: 'nearest' }); }
   }
+  function anyModal() {
+    try { return !!document.querySelector('dialog:modal'); } catch (e) { return $$('dialog[open]').some(d => d.id !== 'dlg-edit' || !isDesktop()); }
+  }
   function setupKeys() {
     document.addEventListener('keydown', e => {
       const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) && e.target.id !== 'q';
-      if (document.querySelector('dialog[open]') || typing) return;
+      if (anyModal()) return;
+      if (e.key === 'Escape' && isDesktop() && $('#dlg-edit').open && (typing || $('#dlg-edit').contains(e.target))) { e.preventDefault(); closeEditor(); return; }
+      if (typing || $('#dlg-edit').contains(e.target)) return;
       if (e.key === '/' && e.target.id !== 'q') { e.preventDefault(); $('#q').focus(); $('#q').select(); return; }
       if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
         if (!results.length) return;
         e.preventDefault();
         sel = Math.max(0, Math.min(results.length - 1, sel + (e.key === 'ArrowDown' ? 1 : -1)));
         markSel();
-      } else if (e.key === 'Enter' && sel >= 0 && results[sel]) { e.preventDefault(); openCard(results[sel]); }
+        if (isDesktop()) { clearTimeout(setupKeys.t); setupKeys.t = setTimeout(() => results[sel] && openCard(results[sel], { preview: true }), 120); } // 電腦版:右側即時預覽
+      } else if (e.key === 'Enter' && sel >= 0 && results[sel]) {
+        e.preventDefault();
+        if (isDesktop() && $('#dlg-edit').open && ed.card && ed.card.id === results[sel].id) $('#edit-form').elements.name.focus();
+        else openCard(results[sel]);
+      }
       else if (e.key === 'Escape' && e.target.id === 'q') { $('#q').value = ''; render(); }
     });
   }
@@ -230,6 +258,7 @@
     return {
       progress(status, p) {
         $('.st', el).textContent = statusText(status);
+        $('.bar', el).classList.toggle('busy', p == null);
         if (p != null) $('.bar i', el).style.width = Math.round(p * 100) + '%';
       },
       fail(msg) { el.classList.add('err'); $('.st', el).textContent = msg; setTimeout(() => el.remove(), 8000); },
@@ -238,12 +267,15 @@
   }
   function statusText(s) {
     return ({ 'loading tesseract core': '載入 OCR 引擎', 'initializing tesseract': '初始化', 'loading language traineddata': '下載語言檔(第一次較久)',
-      'initializing api': '初始化', 'recognizing text': '辨識文字' })[s] || s || '';
+      'initializing api': '初始化', 'recognizing text': '辨識文字', 'initialized api': '準備辨識' })[s] || s || '';
   }
 
   async function runOcr(prep, job) {
     const onProgress = (s, p) => job && job.progress(s, p);
-    if (settings.engine === 'claude') return OCR.claude(prep, { apiKey: settings.apiKey, model: settings.model, onProgress });
+    if (settings.engine === 'claude') {
+      try { return await OCR.claude(prep, { apiKey: settings.apiKey, model: settings.model, onProgress }); }
+      catch (e) { toast('Claude 辨識失敗(' + (e.message || e) + '),改用本機辨識', 4500); }
+    }
     return OCR.tesseract(prep, { langs: settings.langs, onProgress });
   }
 
@@ -256,7 +288,7 @@
     for (const f of files) {
       const job = jobUi(f.name || '名片');
       try {
-        const prep = await OCR.prepare(f);
+        const prep = await OCR.prepare(f, { autoCrop: settings.autoCrop });
         const r = await runOcr(prep, job);
         await Store.saveCard({ ...r.fields, tags: [], notes: '', rawText: r.text, needsReview: true, source: settings.engine }, prep.image);
         ok++; job.done();
@@ -266,11 +298,13 @@
     if (ok) { filters.review = true; render(); toast(`已建檔 ${ok} 張,請檢查「待確認」的名片`, 4000); }
   }
 
+  function onProgressPrep(job) { job.progress('找出名片、拉正與裁切', null); }
   async function scanOne(file) {
     const job = jobUi(file.name || '名片');
     let prep;
     try {
-      prep = await OCR.prepare(file);
+      onProgressPrep(job);
+      prep = await OCR.prepare(file, { autoCrop: settings.autoCrop });
       const r = await runOcr(prep, job);
       job.done();
       openEditor({ ...r.fields, rawText: r.text, source: settings.engine }, { image: prep.image, isNew: true, ocr: r });
@@ -281,15 +315,44 @@
   }
 
   /* ---------- 編輯 ---------- */
-  const ed = { card: null, image: null, imageChanged: false, isNew: false, url: null };
+  const ed = { card: null, image: null, imageChanged: false, isNew: false, url: null, dirty: false, switching: false };
 
-  async function openCard(card) {
+  /** 編輯窗格有未儲存的修改時,換卡片前先確認 */
+  function okToLeave() {
+    return !($('#dlg-edit').open && ed.dirty) || confirm('這張名片有尚未儲存的修改,要放棄修改嗎?');
+  }
+  async function openCard(card, { preview } = {}) {
+    if (ed.card && ed.card.id === card.id && $('#dlg-edit').open && !ed.isNew) return;
+    if (!okToLeave()) return;
     const image = card.hasImage ? await Store.getImage(card.id).catch(() => null) : null;
-    openEditor(card, { image, isNew: false });
+    openEditor(card, { image, isNew: false, preview });
+  }
+  function showEditor() {
+    const dlg = $('#dlg-edit');
+    if (isDesktop()) {
+      if (dlg.open && dlg.matches(':modal')) { ed.switching = true; dlg.close(); ed.switching = false; }
+      if (!dlg.open) dlg.show();
+      $('#pane').classList.add('has-card');
+    } else {
+      if (dlg.open && !dlg.matches(':modal')) { ed.switching = true; dlg.close(); ed.switching = false; }
+      if (!dlg.open) dlg.showModal();
+    }
+    markOpen();
+  }
+  function closeEditor() {
+    if (!okToLeave()) return;
+    ed.dirty = false;
+    $('#dlg-edit').close();
+  }
+  function markOpen() {
+    $$('.card.open').forEach(el => el.classList.remove('open'));
+    if (!$('#dlg-edit').open || !ed.card || !ed.card.id || !isDesktop()) return;
+    const el = $(`.card[data-id="${CSS.escape(ed.card.id)}"]`);
+    if (el) el.classList.add('open');
   }
 
-  function openEditor(card, { image, isNew, ocr, error } = {}) {
-    ed.card = { ...card }; ed.image = image || null; ed.imageChanged = isNew && !!image; ed.isNew = !!isNew;
+  function openEditor(card, { image, isNew, ocr, error, preview } = {}) {
+    ed.card = { ...card }; ed.image = image || null; ed.imageChanged = isNew && !!image; ed.isNew = !!isNew; ed.dirty = !!isNew;
     const form = $('#edit-form');
     for (const k of EDIT_FIELDS) {
       const el = form.elements[k];
@@ -312,9 +375,10 @@
     showShot();
     renderQuick(card);
     const dlg = $('#dlg-edit');
-    if (!dlg.open) dlg.showModal();
+    showEditor();
     $('.dlg-body', dlg).scrollTop = 0;
     if (isNew && matchMedia('(pointer:fine)').matches) setTimeout(() => form.elements.name.focus({ preventScroll: true }), 50);
+    else if (isDesktop() && !preview) setTimeout(() => $('#edit-title').focus({ preventScroll: true }), 0);
   }
 
   function showShot() {
@@ -394,10 +458,15 @@
         if (image) dropThumb(dup.id);
       }
     } else if (image) dropThumb(c.id);
-    await Store.saveCard(c, image);
-    $('#dlg-edit').close();
-    await refresh();
-    toast(ed.isNew ? '已存入名片庫' : '已更新');
+    const saved = await Store.saveCard(c, image);
+    const wasNew = ed.isNew;
+    ed.dirty = false;
+    if (isDesktop()) {
+      await refresh();
+      const fresh = cards.find(x => x.id === saved.id);
+      if (fresh) openEditor(fresh, { image: saved.hasImage ? await Store.getImage(saved.id).catch(() => null) : null, isNew: false, preview: true });
+    } else { $('#dlg-edit').close(); await refresh(); }
+    toast(wasNew ? '已存入名片庫' : '已更新');
     return true;
   }
 
@@ -586,6 +655,7 @@
     const f = $('#dlg-settings form');
     f.elements.engine.value = settings.engine; f.elements.langs.value = settings.langs;
     f.elements.apiKey.value = settings.apiKey; f.elements.model.value = settings.model;
+    f.elements.layout.value = settings.layout; f.elements.autoCrop.checked = settings.autoCrop !== false;
     const est = await Store.estimate();
     $('#set-storage').textContent = `名片 ${cards.length} 張` + (est ? `,已使用約 ${(est.usage / 1048576).toFixed(1)} MB` : '') +
       '。資料只存在這台裝置的瀏覽器,清除瀏覽資料會一併刪除,請定期「完整備份」。';
@@ -611,8 +681,12 @@
       const a = e.target.closest('[data-act]'); if (a) act(a.dataset.act);
     });
     $('#rail').addEventListener('click', e => { const b = e.target.closest('button'); if (b) jumpTo(b.dataset.key); });
-    $('#btn-scan').onclick = () => act('scan');
-    $('#btn-new').onclick = () => openEditor({ tags: [] }, { isNew: true });
+    $('#btn-scan').onclick = () => act('scan-file');
+    $('#bb-scan').onclick = () => act('scan');
+    $('#btn-cam').hidden = !Camera.supported();
+    $('#btn-cam').onclick = () => openCamera();
+    $('#btn-new').onclick = () => { if (okToLeave()) openEditor({ tags: [] }, { isNew: true }); };
+    Camera.bind();
     $('#file-scan').onchange = e => { scanFiles(e.target.files); e.target.value = ''; };
     $('#file-import').onchange = e => { if (e.target.files[0]) importFile(e.target.files[0]); e.target.value = ''; };
     const menu = $('#menu');
@@ -621,8 +695,13 @@
     $('.menu-list').onclick = e => { const b = e.target.closest('[data-act]'); if (b) { menu.classList.remove('open'); act(b.dataset.act); } };
 
     // 對話框
-    $$('dialog [data-close]').forEach(b => (b.onclick = () => b.closest('dialog').close()));
-    $('#dlg-edit').addEventListener('close', () => { if (ed.url) { URL.revokeObjectURL(ed.url); ed.url = null; } });
+    $$('dialog [data-close]').forEach(b => (b.onclick = () => (b.closest('dialog').id === 'dlg-edit' ? closeEditor() : b.closest('dialog').close())));
+    $('#dlg-edit').addEventListener('close', () => {
+      if (ed.switching) return; // 只是在電腦版 / 手機版之間搬移
+      if (ed.url) { URL.revokeObjectURL(ed.url); ed.url = null; }
+      $('#pane').classList.remove('has-card'); markOpen();
+    });
+    $('#dlg-edit').addEventListener('cancel', e => { e.preventDefault(); closeEditor(); });
     $('#edit-form').addEventListener('submit', e => { e.preventDefault(); saveEditor(); });
     $('#edit-fav').onclick = () => setFav(!ed.card.favorite);
     $('#edit-rotate').onclick = rotateImage;
@@ -636,18 +715,19 @@
     $('#edit-delete').onclick = async () => {
       if (!confirm(`確定刪除「${ed.card.name || ed.card.company || '這張名片'}」?`)) return;
       await Store.deleteCard(ed.card.id); dropThumb(ed.card.id);
-      $('#dlg-edit').close(); await refresh(); toast('已刪除');
+      ed.dirty = false; $('#dlg-edit').close(); await refresh(); toast('已刪除');
     };
     $('#edit-vcf').onclick = () => { const c = readForm(); download(toVcard(c), `${c.name || c.company || 'card'}.vcf`, 'text/vcard'); };
-    $('#edit-fields').addEventListener('input', e => { e.target.classList.remove('ocr-hit'); renderQuick(readForm()); });
+    $('#edit-fields').addEventListener('input', e => { ed.dirty = true; e.target.classList.remove('ocr-hit'); renderQuick(readForm()); });
 
     const sf = $('#dlg-settings form');
     sf.addEventListener('submit', e => {
       e.preventDefault();
       settings.engine = sf.elements.engine.value || 'tesseract'; settings.langs = sf.elements.langs.value;
       settings.apiKey = sf.elements.apiKey.value.trim(); settings.model = sf.elements.model.value;
+      settings.layout = sf.elements.layout.value; settings.autoCrop = sf.elements.autoCrop.checked;
       if (settings.engine === 'claude' && !settings.apiKey) { toast('使用 Claude 需要輸入 API 金鑰'); return; }
-      saveSettings(); $('#dlg-settings').close(); toast('設定已儲存');
+      saveSettings(); $('#dlg-settings').close(); applyLayout(); toast('設定已儲存');
     });
     $('#set-persist').onclick = async () => toast((await Store.persist()) ? '瀏覽器已同意永久保存,不會因空間不足自動清除' : '瀏覽器未同意(可把網頁加入主畫面後再試)', 4000);
     $('#set-demo').onclick = async () => { $('#dlg-settings').close(); await loadDemo(); };
@@ -670,17 +750,26 @@
     });
 
     // 表頭高度 → 分組標題黏附位置
-    const setHdr = () => document.documentElement.style.setProperty('--hdr', $('#top').offsetHeight + 'px');
     setHdr();
     if ('ResizeObserver' in self) new ResizeObserver(setHdr).observe($('#top'));
     addEventListener('resize', () => renderRail(railGroups()));
+    wideMq.addEventListener ? wideMq.addEventListener('change', applyLayout) : wideMq.addListener(applyLayout);
   }
   function railGroups() {
     return $('#q').value.trim() ? [] : $$('.group').map(s => ({ key: s.dataset.key }));
   }
 
+  function openCamera() {
+    Camera.open({
+      onShots: files => scanFiles(files),
+      onPickFile: () => $('#file-scan').click(),
+      onError: msg => toast(msg, 5000),
+    });
+  }
+
   function act(a) {
-    if (a === 'scan') $('#file-scan').click();
+    if (a === 'scan') { if (!isDesktop() && Camera.supported()) openCamera(); else $('#file-scan').click(); }
+    else if (a === 'scan-file') $('#file-scan').click();
     else if (a === 'import') $('#file-import').click();
     else if (a === 'demo') loadDemo();
     else if (a === 'settings') openSettings();
@@ -698,6 +787,6 @@
   // 給測試與除錯用
   self.CardApp = { toCsv, toVcard, csvToCards, vcfToCards, mergeInto, findDuplicate: c => findDuplicate(c), refresh };
 
-  bind(); setupRail(); setupKeys();
+  applyLayout(); bind(); setupRail(); setupKeys();
   refresh();
 })();
