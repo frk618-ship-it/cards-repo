@@ -5,6 +5,9 @@ const fs = require('fs'), path = require('path');
 const NM = path.join(__dirname, 'node_modules');
 const PAGE = process.argv[2] || path.join(__dirname, '..', '..', 'dist', 'index.html');
 const ONLY = process.argv[3];
+// ENGINE=minicpm MC_SERVER=http://127.0.0.1:18499 [MC_MODE=kie] [MC_KEY=…]:改測自架的 MiniCPM-OCR
+const ENGINE = process.env.ENGINE || 'tesseract';
+const MC = { serverUrl: process.env.MC_SERVER || 'http://127.0.0.1:18499', model: process.env.MC_MODEL || 'minicpm-ocr', apiKey: process.env.MC_KEY || '', mode: process.env.MC_MODE || 'text' };
 const OUT = path.join(__dirname, 'out'); fs.mkdirSync(OUT, { recursive: true });
 const CARDS = [
   { id: 'A', truth: { name: '林雅婷', company: '星河光電股份有限公司', title: '資深採購專員', mobile: '0912-345-678', tel: '03-578-1234 #215', email: 'yating.lin@galaxy-opto.com.tw', address: '新竹市東區園區二路 18 號' },
@@ -41,6 +44,16 @@ const norm = s => String(s || '').normalize('NFKC').replace(/[\s\-()#.,]/g, '').
     if (!file || !fs.existsSync(file)) return route.fulfill({ status: 404, body: '' });
     route.fulfill({ status: 200, body: fs.readFileSync(file), headers: { 'content-type': file.endsWith('.js') ? 'application/javascript' : 'application/octet-stream' } });
   });
+  if (ENGINE === 'minicpm') {
+    // 由 Playwright 轉送到 MiniCPM-OCR 伺服器並補上 CORS 標頭,伺服器本身不必設定跨來源
+    const origin = new URL(MC.serverUrl).origin;
+    await ctx.route(origin + '/**', async route => {
+      const cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': '*' };
+      if (route.request().method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
+      const resp = await route.fetch({ timeout: 600000 });
+      route.fulfill({ response: resp, headers: { ...resp.headers(), ...cors } });
+    });
+  }
   const p = await ctx.newPage(); p.on('pageerror', e => console.log('pageerror', e.message));
   const srv = require('http').createServer((q, r) => { r.setHeader('content-type', 'text/html; charset=utf-8'); r.end(fs.readFileSync(PAGE)); }).listen(8795);
   await p.goto('http://127.0.0.1:8795/');
@@ -76,18 +89,19 @@ const norm = s => String(s || '').normalize('NFKC').replace(/[\s\-()#.,]/g, '').
       return P.toDataURL('image/jpeg', v === 'small-blurry' ? 0.6 : 0.85);
     }, { draw: card.draw, v });
     fs.writeFileSync(path.join(OUT, `${card.id}-${v}.jpg`), Buffer.from(dataUrl.split(',')[1], 'base64'));
-    const fields = await p.evaluate(async url => {
+    const fields = await p.evaluate(async ({ url, engine, mc }) => {
       const blob = await (await fetch(url)).blob();
       const prep = await CardOCR.prepare(blob);
-      const r = await CardOCR.tesseract(prep, { langs: 'chi_tra' });
+      const r = engine === 'minicpm' ? await CardOCR.minicpm(prep, { ...mc, timeoutMs: 600000 }) : await CardOCR.tesseract(prep, { langs: 'chi_tra' });
       return r.fields;
-    }, dataUrl);
+    }, { url: dataUrl, engine: ENGINE, mc: MC });
     let n = 0, k = 0;
     for (const [f, val] of Object.entries(card.truth)) { if (!val) continue; k++; if (norm(fields[f]) === norm(val)) n++; else misses.push(`${card.id}/${v}/${f}: got ${JSON.stringify(fields[f] || '')}`); }
     tot += k; ok += n; (perVar[v] = perVar[v] || [0, 0]); perVar[v][0] += n; perVar[v][1] += k;
     console.log(card.id, v.padEnd(20), `${n}/${k}`);
   }
   console.log('\nby variant:', Object.entries(perVar).map(([k, [a, c]]) => `${k} ${a}/${c}`).join(' · '));
+  console.log(`engine ${ENGINE}${ENGINE === 'minicpm' ? ' (' + MC.mode + ')' : ''}`);
   console.log(`TOTAL ${ok}/${tot} = ${(100 * ok / tot).toFixed(1)}%  (${((Date.now() - t0) / 1000).toFixed(0)}s)`);
   fs.writeFileSync(path.join(OUT, 'misses.txt'), misses.join('\n'));
   await b.close(); srv.close();

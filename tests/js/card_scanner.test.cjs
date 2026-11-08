@@ -186,3 +186,22 @@ test('fixes common OCR confusions', () => {
   const e = P.parseCardText('Emily Carter\nemily.cartere@northwind.com\nACME Inc.').fields;
   assert.equal(e.email, 'emily.carter@northwind.com');
 });
+
+/* ---------- MiniCPM-OCR client helpers (ocr.js) ---------- */
+const { CardOCR } = require(path.join(web, 'ocr.js'));
+
+test('MiniCPM-OCR endpoint accepts host, /v1, full path or the same-origin proxy', () => {
+  const e = CardOCR.minicpmEndpoint;
+  assert.equal(e('http://127.0.0.1:18499'), 'http://127.0.0.1:18499/v1/chat/completions');
+  assert.equal(e('http://127.0.0.1:18499/'), 'http://127.0.0.1:18499/v1/chat/completions');
+  assert.equal(e('http://gpu-box:8000/v1'), 'http://gpu-box:8000/v1/chat/completions');
+  assert.equal(e('http://x/v1/chat/completions'), 'http://x/v1/chat/completions');
+  assert.equal(e('/minicpm'), '/minicpm/v1/chat/completions');
+  assert.throws(() => e(''), /伺服器網址/);
+});
+
+test('MiniCPM-OCR key-information JSON is mapped to card fields', () => {
+  const f = CardOCR.parseKie('<think></think>```json\n{"姓名": "王大明", "英文姓名": "###", "公司": "鑫科材料科技股份有限公司", "手機": ["0912-345-678", "0988-000-111"], "Email": "david@x.com", "地址": "###"}\n```');
+  assert.deepEqual(f, { name: '王大明', company: '鑫科材料科技股份有限公司', mobile: '0912-345-678 / 0988-000-111', email: 'david@x.com' });
+  assert.throws(() => CardOCR.parseKie('沒有 JSON'), /JSON/);
+});

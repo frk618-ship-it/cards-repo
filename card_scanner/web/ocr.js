@@ -1,6 +1,7 @@
 /* 影像前處理與 OCR 引擎:
  *  - 前處理(prepare):自動找出名片、裁掉背景、拉正傾斜;辨識前放大、去陰影、深底白字反相,並以試辨識判斷 0/90/180/270 度方向。
  *  - tesseract:Tesseract.js 在瀏覽器內辨識,免金鑰;第一次使用會下載語言檔(約 20 MB,之後快取)。
+ *  - minicpm:OpenBMB 的 MiniCPM-OCR 1.0(1.3B)跑在自己的伺服器(llama.cpp / Ollama / vLLM),經 OpenAI 相容 API 呼叫。
  *  - claude:Claude 視覺模型直接讀名片並回傳結構化欄位,準確度高,需自己的 Anthropic API 金鑰(只存在這台裝置)。 */
 (function (root) {
   'use strict';
@@ -273,6 +274,118 @@
     return { text: out.rawText || '', fields, unmatched: out.other ? [out.other] : [], model: msg.model };
   }
 
+  /* ---------- MiniCPM-OCR(自架伺服器,OpenAI 相容 API) ----------
+   * OpenBMB 的 1.3B OCR 模型,用 llama.cpp(llama-server,可純 CPU)、Ollama 或 vLLM 在自己的電腦 / 伺服器上執行,
+   * 這裡透過 /v1/chat/completions 呼叫。兩種模式:
+   *  - text:用官方的「Text Recognition:」提示逐字辨識,再交給 parser.js 判斷欄位(預設)
+   *  - kie :用官方的關鍵資訊擷取格式,直接要模型回傳名片欄位 JSON(沒有的欄位填 ###) */
+  const KIE_FIELDS = { name: '姓名', nameEn: '英文姓名', company: '公司', companyEn: '公司英文名', department: '部門', title: '職稱',
+    mobile: '手機', tel: '電話', fax: '傳真', email: 'Email', website: '網址', address: '地址', taxId: '統一編號', lineId: 'LINE ID' };
+  const MINICPM_TEXT_PROMPT = 'Text Recognition:';
+  function kiePrompt() {
+    const keys = Object.values(KIE_FIELDS).map(k => `"${k}"`).join(', ');
+    return `Extract ${keys}. 這是一張名片。請以 JSON 物件回傳以上欄位,欄位名稱照抄;多個電話或 Email 用「 / 」分隔;圖片中沒有的欄位填 "###"。`;
+  }
+  /** 伺服器網址 → chat completions 端點:接受 http://host:18499、…/v1、…/v1/chat/completions,或同源代理路徑 /minicpm */
+  function minicpmEndpoint(base) {
+    let u = String(base || '').trim().replace(/\/+$/, '');
+    if (!u) throw new Error('請先在「設定」輸入 MiniCPM-OCR 伺服器網址');
+    if (/\/chat\/completions$/.test(u)) return u;
+    if (!/\/v1$/.test(u)) u += '/v1';
+    return u + '/chat/completions';
+  }
+  function stripThinking(t) {
+    return String(t || '').replace(/<think>[\s\S]*?<\/think>/g, '').replace(/^```[a-z]*\s*|\s*```$/gi, '').trim();
+  }
+  function parseKie(text) {
+    const t = stripThinking(text);
+    const m = t.match(/\{[\s\S]*\}/);
+    if (!m) throw new Error('模型沒有回傳 JSON');
+    const obj = JSON.parse(m[0]);
+    const fields = {};
+    for (const [k, label] of Object.entries(KIE_FIELDS)) {
+      const v = obj[label] != null ? obj[label] : obj[k];
+      const s = Array.isArray(v) ? v.join(' / ') : String(v == null ? '' : v).trim();
+      if (s && s !== '###' && !/^(無|none|null|n\/a)$/i.test(s)) fields[k] = s;
+    }
+    return fields;
+  }
+
+  // 主要欄位抓到幾個:用來判斷方向對不對
+  const keyFieldCount = f => ['name', 'company', 'mobile', 'tel', 'email', 'title', 'address'].filter(k => f[k]).length;
+
+  /** MiniCPM-OCR 不判斷照片方向:結果太少(主要欄位 < 2)時,依序試 180°/90°/270°,保留欄位最多的結果 */
+  async function minicpm(prep, opts = {}) {
+    let best = await minicpmOnce(prep.image, opts), bestRot = 0;
+    if (keyFieldCount(best.fields) < 2 && prep.canvas) {
+      const portrait = prep.canvas.height > prep.canvas.width * 1.15;
+      for (const rot of portrait ? [90, 270, 180] : [180, 90, 270]) {
+        opts.onProgress && opts.onProgress(`方向不對?改試 ${rot}°`, null);
+        const img = await toBlob(fit(orient(prep.canvas, rot), 1600), 'image/jpeg', 0.88);
+        const r = await minicpmOnce(img, opts).catch(() => null);
+        if (r && keyFieldCount(r.fields) > keyFieldCount(best.fields)) { best = r; bestRot = rot; }
+        if (keyFieldCount(best.fields) >= 3) break;
+      }
+      if (bestRot) {
+        prep.rotate = bestRot; prep.canvas = orient(prep.canvas, bestRot);
+        prep.image = await toBlob(fit(prep.canvas, 1600), 'image/jpeg', 0.88);
+      }
+    }
+    return { ...best, rotate: bestRot };
+  }
+
+  async function minicpmOnce(image, { serverUrl, model = 'minicpm-ocr', apiKey = '', mode = 'text', timeoutMs = 180000, onProgress } = {}) {
+    const url = minicpmEndpoint(serverUrl);
+    const data = await blobToBase64(image);
+    const body = {
+      model: model || 'minicpm-ocr',
+      messages: [{ role: 'user', content: [
+        { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,' + data } },
+        { type: 'text', text: mode === 'kie' ? kiePrompt() : MINICPM_TEXT_PROMPT },
+      ] }],
+      // 官方範例的取樣設定(近似貪婪解碼);thinking 關閉
+      temperature: 0.01, top_p: 0.001, top_k: 1, max_tokens: 2048, stream: false,
+      chat_template_kwargs: { enable_thinking: false },
+    };
+    const headers = { 'Content-Type': 'application/json' };
+    if (apiKey) headers.Authorization = 'Bearer ' + apiKey;
+    onProgress && onProgress('MiniCPM-OCR 辨識中', null);
+    const ctrl = new AbortController(), timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    let res;
+    try {
+      res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body), signal: ctrl.signal });
+    } catch (e) {
+      throw new Error(e.name === 'AbortError' ? 'MiniCPM-OCR 逾時(電腦太慢可改用 GPU 或較小的量化模型)'
+        : '連不上 MiniCPM-OCR 伺服器:請確認已啟動、網址正確,且伺服器允許此網頁跨來源連線(或改用 card_scanner serve 的代理)');
+    } finally { clearTimeout(timer); }
+    if (res.status === 401 || res.status === 403) throw new Error('MiniCPM-OCR 伺服器拒絕存取:請確認 API 金鑰');
+    if (res.status === 404) throw new Error('找不到模型或端點:請確認模型名稱(預設 minicpm-ocr)與網址');
+    if (!res.ok) throw new Error(`MiniCPM-OCR 伺服器錯誤 ${res.status}:` + (await res.text().catch(() => '')).slice(0, 200));
+    const json = await res.json();
+    const choice = json.choices && json.choices[0];
+    const content = choice && choice.message && choice.message.content;
+    const raw = Array.isArray(content) ? content.map(c => c.text || '').join('') : content;
+    if (!raw) throw new Error('MiniCPM-OCR 沒有回傳內容');
+    const truncated = choice.finish_reason === 'length';
+    onProgress && onProgress('完成', 1);
+    if (mode === 'kie') {
+      const fields = parseKie(raw);
+      return { text: Object.entries(fields).map(([k, v]) => `${KIE_FIELDS[k]}:${v}`).join('\n'), fields, unmatched: [], truncated, engine: 'minicpm' };
+    }
+    const text = stripThinking(raw);
+    const parsed = root.CardParser.parseCardText(text);
+    return { text, fields: parsed.fields, unmatched: parsed.unmatched, truncated, engine: 'minicpm' };
+  }
+
+  /** 測試連線:GET /v1/models,回傳模型清單 */
+  async function minicpmPing({ serverUrl, apiKey = '' } = {}) {
+    const url = minicpmEndpoint(serverUrl).replace(/\/chat\/completions$/, '/models');
+    const res = await fetch(url, { headers: apiKey ? { Authorization: 'Bearer ' + apiKey } : {} });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const j = await res.json().catch(() => ({}));
+    return (j.data || j.models || []).map(m => m.id || m.name).filter(Boolean);
+  }
+
   function blobToBase64(blob) {
     return new Promise((resolve, reject) => {
       const r = new FileReader();
@@ -282,5 +395,5 @@
     });
   }
 
-  root.CardOCR = { prepare, tesseract, claude, blobToBase64, CLAUDE_FIELDS, ocrCanvas };
+  root.CardOCR = { prepare, tesseract, claude, minicpm, minicpmPing, minicpmEndpoint, parseKie, blobToBase64, CLAUDE_FIELDS, ocrCanvas };
 })(typeof self !== 'undefined' ? self : this);

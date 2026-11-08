@@ -179,6 +179,7 @@
       </fieldset>
       <fieldset><legend>OCR 引擎</legend>
         <label class="radio"><input type="radio" name="engine" value="tesseract"><span>本機辨識(Tesseract)<small>免費、照片不離開裝置。會自動裁切名片、拉正傾斜、判斷方向、去除陰影。第一次使用需下載約 20 MB 語言檔;對手寫、藝術字較弱。</small></span></label>
+        <label class="radio"><input type="radio" name="engine" value="minicpm"><span>MiniCPM-OCR(自架伺服器)<small>OpenBMB 開源的 1.3B OCR 模型,在自己的電腦或伺服器上用 llama.cpp / Ollama / vLLM 執行,照片只送到你的伺服器、免費。中英文辨識比本機 Tesseract 強很多;需要先架好伺服器(說明見 README)。失敗時自動改用本機辨識。</small></span></label>
         <label class="radio"><input type="radio" name="engine" value="claude"><span>Claude 視覺辨識<small>準確度最高,直接判斷欄位;照片會傳送到 Anthropic API,依用量計費,需要自己的 API 金鑰。失敗時自動改用本機辨識。</small></span></label>
       </fieldset>
       <fieldset><legend>本機辨識</legend>
@@ -188,6 +189,19 @@
           <option value="jpn+eng">日文 + 英文</option><option value="kor+eng">韓文 + 英文</option><option value="eng">英文</option>
         </select></label>
         <label class="radio"><input type="checkbox" name="autoCrop"><span>自動裁切與拉正<small>從照片中找出名片、裁掉桌面背景並修正傾斜。名片占滿整張照片時可關閉。</small></span></label>
+      </fieldset>
+      <fieldset><legend>MiniCPM-OCR 伺服器</legend>
+        <label class="f">伺服器網址<input name="mcServer" autocomplete="off" autocapitalize="off" placeholder="http://127.0.0.1:18499"></label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <label class="f">模型名稱<input name="mcModel" autocomplete="off" autocapitalize="off" placeholder="minicpm-ocr"></label>
+          <label class="f">API 金鑰(選填)<input name="mcKey" type="password" autocomplete="off"></label>
+        </div>
+        <label class="f">辨識方式<select name="mcMode">
+          <option value="text">逐字辨識 + 規則判斷欄位(建議)</option>
+          <option value="kie">模型直接擷取欄位(JSON)</option>
+        </select></label>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button type="button" class="btn" id="set-mc-test">測試連線</button><span class="hint" id="set-mc-result"></span></div>
+        <div class="hint">用 <code>python -m card_scanner serve --ocr-backend http://127.0.0.1:18499</code> 開啟時,網址填 <code>/minicpm</code> 即可(同源代理,不必設定跨來源,金鑰也留在伺服器)。直接連線時伺服器須允許跨來源(CORS);從 https 網頁連 http://127.0.0.1 在 Chrome / Edge 可行,Safari 會擋。</div>
       </fieldset>
       <fieldset><legend>Claude</legend>
         <label class="f">Anthropic API 金鑰<input name="apiKey" type="password" autocomplete="off" placeholder="sk-ant-…"></label>

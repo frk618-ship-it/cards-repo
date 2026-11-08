@@ -17,7 +17,7 @@
 
   /* ---------- 設定 ---------- */
   const SETTINGS_KEY = 'card-scanner-settings';
-  const settings = Object.assign({ engine: 'tesseract', langs: 'chi_tra', apiKey: '', model: 'claude-opus-5-5', mode: 'name', layout: 'auto', autoCrop: true }, (() => {
+  const settings = Object.assign({ engine: 'tesseract', langs: 'chi_tra', apiKey: '', model: 'claude-opus-5-5', mode: 'name', layout: 'auto', autoCrop: true, mcServer: '', mcModel: 'minicpm-ocr', mcKey: '', mcMode: 'text' }, (() => {
     try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); } catch (e) { return {}; }
   })());
   const saveSettings = () => { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) { /* 私密瀏覽 */ } };
@@ -272,6 +272,10 @@
 
   async function runOcr(prep, job) {
     const onProgress = (s, p) => job && job.progress(s, p);
+    if (settings.engine === 'minicpm') {
+      try { return await OCR.minicpm(prep, { serverUrl: settings.mcServer, model: settings.mcModel, apiKey: settings.mcKey, mode: settings.mcMode, onProgress }); }
+      catch (e) { toast('MiniCPM-OCR 辨識失敗(' + (e.message || e) + '),改用本機辨識', 5000); }
+    }
     if (settings.engine === 'claude') {
       try { return await OCR.claude(prep, { apiKey: settings.apiKey, model: settings.model, onProgress }); }
       catch (e) { toast('Claude 辨識失敗(' + (e.message || e) + '),改用本機辨識', 4500); }
@@ -655,6 +659,8 @@
     const f = $('#dlg-settings form');
     f.elements.engine.value = settings.engine; f.elements.langs.value = settings.langs;
     f.elements.apiKey.value = settings.apiKey; f.elements.model.value = settings.model;
+    f.elements.mcServer.value = settings.mcServer; f.elements.mcModel.value = settings.mcModel;
+    f.elements.mcKey.value = settings.mcKey; f.elements.mcMode.value = settings.mcMode; $('#set-mc-result').textContent = '';
     f.elements.layout.value = settings.layout; f.elements.autoCrop.checked = settings.autoCrop !== false;
     const est = await Store.estimate();
     $('#set-storage').textContent = `名片 ${cards.length} 張` + (est ? `,已使用約 ${(est.usage / 1048576).toFixed(1)} MB` : '') +
@@ -725,10 +731,22 @@
       e.preventDefault();
       settings.engine = sf.elements.engine.value || 'tesseract'; settings.langs = sf.elements.langs.value;
       settings.apiKey = sf.elements.apiKey.value.trim(); settings.model = sf.elements.model.value;
+      settings.mcServer = sf.elements.mcServer.value.trim(); settings.mcModel = sf.elements.mcModel.value.trim() || 'minicpm-ocr';
+      settings.mcKey = sf.elements.mcKey.value.trim(); settings.mcMode = sf.elements.mcMode.value;
+      if (settings.engine === 'minicpm' && !settings.mcServer) { toast('使用 MiniCPM-OCR 需要輸入伺服器網址'); return; }
       settings.layout = sf.elements.layout.value; settings.autoCrop = sf.elements.autoCrop.checked;
       if (settings.engine === 'claude' && !settings.apiKey) { toast('使用 Claude 需要輸入 API 金鑰'); return; }
       saveSettings(); $('#dlg-settings').close(); applyLayout(); toast('設定已儲存');
     });
+    $('#set-mc-test').onclick = async () => {
+      const out = $('#set-mc-result'), f = sf.elements;
+      out.textContent = '連線中…';
+      try {
+        const models = await OCR.minicpmPing({ serverUrl: f.mcServer.value.trim(), apiKey: f.mcKey.value.trim() });
+        const want = f.mcModel.value.trim() || 'minicpm-ocr';
+        out.textContent = models.length ? (models.some(m => m === want || m.split(':')[0] === want) ? `✓ 已連線,找到模型 ${want}` : `已連線,但沒有 ${want}(伺服器上有:${models.join(', ')})`) : '✓ 已連線';
+      } catch (e) { out.textContent = '✗ 無法連線:' + (e.message || e) + '(伺服器是否啟動?是否允許跨來源?)'; }
+    };
     $('#set-persist').onclick = async () => toast((await Store.persist()) ? '瀏覽器已同意永久保存,不會因空間不足自動清除' : '瀏覽器未同意(可把網頁加入主畫面後再試)', 4000);
     $('#set-demo').onclick = async () => { $('#dlg-settings').close(); await loadDemo(); };
     $('#set-clear').onclick = async () => {
@@ -787,6 +805,19 @@
   // 給測試與除錯用
   self.CardApp = { toCsv, toVcard, csvToCards, vcfToCards, mergeInto, findDuplicate: c => findDuplicate(c), refresh };
 
-  applyLayout(); bind(); setupRail(); setupKeys();
+  // 由 `card_scanner serve --ocr-backend` 開啟時,同源的 /minicpm 代理可用:沒設定過就自動改用 MiniCPM-OCR
+  async function detectProxy() {
+    if (settings.mcServer || settings.mcProbed || !/^https?:$/.test(location.protocol) || /github\.io$/.test(location.hostname)) return;
+    try {
+      const r = await fetch('/minicpm/v1/models', { cache: 'no-store' });
+      if (!r.ok) return;
+      settings.mcServer = '/minicpm';
+      if (settings.engine === 'tesseract') settings.engine = 'minicpm';
+      settings.mcProbed = true; saveSettings();
+      toast('偵測到 MiniCPM-OCR 伺服器,已改用它辨識(可在設定切換)', 4500);
+    } catch (e) { /* 沒有代理 */ }
+  }
+
+  applyLayout(); bind(); setupRail(); setupKeys(); detectProxy();
   refresh();
 })();
