@@ -219,9 +219,9 @@
     additionalProperties: false,
   };
   const PROMPT = `這是一張名片的照片(可能是中文、英文或日文,也可能正反面都在同一張圖)。請讀出名片上的所有資訊,填入 JSON 欄位:
-- name:姓名(中文名優先;只有外文名就填外文名)。nameEn:英文/外文姓名(和 name 不同時才填)。
+- name:姓名(中文名優先;只有外文名就填外文名)。名片上的姓名通常沒有「姓名」之類的標籤,而是直接列出、字通常最大;不要把公司名、職稱、部門、地名或「敬上」之類的字當成姓名。nameEn:英文/外文姓名(和 name 不同時才填)。
 - company:公司全名(中文優先)。companyEn:公司英文名。department:部門。title:職稱(多個用「 / 」分隔)。
-- mobile:手機;tel:市話/公司電話(含分機寫成「 #123」);fax:傳真。多個號碼用「 / 」分隔,保留原本的區碼與 + 國碼格式。
+- mobile:手機;tel:市話/公司電話(含分機寫成「 #123」);fax:傳真。多個號碼用「 / 」分隔,保留原本的區碼與 + 國碼格式。標示為電話類的項目(手機、Mobile、M、行動、電話、Tel、T、O、Office、直撥、☎、傳真、Fax、F 等)後面的內容一定是電話號碼,請依標籤放進對應欄位;電話欄位只能填號碼(數字、+、-、括號、分機),不要放其他文字。
 - email、website、address(完整地址,中文地址優先)、taxId(統一編號)、lineId。
 - other:名片上其他有用但不屬於上述欄位的資訊(例如服務項目、其他社群帳號),沒有就空字串。
 - rawText:名片上所有文字,依原本排列逐行抄寫。
@@ -284,7 +284,8 @@
   const MINICPM_TEXT_PROMPT = 'Text Recognition:';
   function kiePrompt() {
     const keys = Object.values(KIE_FIELDS).map(k => `"${k}"`).join(', ');
-    return `Extract ${keys}. 這是一張名片。請以 JSON 物件回傳以上欄位,欄位名稱照抄;多個電話或 Email 用「 / 」分隔;圖片中沒有的欄位填 "###"。`;
+    return `Extract ${keys}. 這是一張名片。請以 JSON 物件回傳以上欄位,欄位名稱照抄;多個電話或 Email 用「 / 」分隔;圖片中沒有的欄位填 "###"。`
+      + '姓名通常沒有標籤、直接列出(字通常最大),不要把公司、職稱、地名當姓名。標示為手機/Mobile/M、電話/Tel/T、傳真/Fax/F 的內容一定是電話號碼,依標籤填入「手機」「電話」「傳真」,這些欄位只能填號碼。';
   }
   /** 伺服器網址 → chat completions 端點:接受 http://host:18499、…/v1、…/v1/chat/completions,或同源代理路徑 /minicpm */
   function minicpmEndpoint(base) {

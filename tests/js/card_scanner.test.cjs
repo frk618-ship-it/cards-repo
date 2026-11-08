@@ -205,3 +205,32 @@ test('MiniCPM-OCR key-information JSON is mapped to card fields', () => {
   assert.deepEqual(f, { name: '王大明', company: '鑫科材料科技股份有限公司', mobile: '0912-345-678 / 0988-000-111', email: 'david@x.com' });
   assert.throws(() => CardOCR.parseKie('沒有 JSON'), /JSON/);
 });
+
+/* ---------- reference rules: labelled phone lines are phones; names are unlabelled ---------- */
+test('anything after a phone label is a phone number, in the labelled field', () => {
+  const f = (t) => P.parseCardText(t).fields;
+  assert.deepEqual(f('(O)02-2345-6789 (M)0912-345-678'), { tel: '02-2345-6789', mobile: '0912-345-678' });
+  assert.deepEqual(f('電 話:02-1234-5678 傳 真:02-1234-5679'), { tel: '02-1234-5678', fax: '02-1234-5679' });
+  assert.deepEqual(f('☎ 06-505-0001 📱 0928-111-222'), { tel: '06-505-0001', mobile: '0928-111-222' });
+  assert.deepEqual(f('手機\n0912-345-678'), { mobile: '0912-345-678' });              // label alone, number on the next line
+  assert.deepEqual(f('M: 0912-345-678 / 0988-111-222'), { mobile: '0912-345-678 / 0988-111-222' });
+  assert.deepEqual(f('TEL: O6-5O5-OOO1'), { tel: '06-505-0001' });                     // OCR letters for digits
+  assert.deepEqual(f('電話:(02)2345-6789 轉 l23'), { tel: '(02)2345-6789 #123' });
+  assert.deepEqual(f('電話 06-5S0'), { tel: '06-550' });                               // damaged number stays in the phone field
+});
+
+test('names are recognised without a label, preferring common surnames over other short words', () => {
+  const f = (t) => P.parseCardText(t).fields;
+  assert.equal(f('台灣\n星河光電股份有限公司\n林雅婷\n資深採購專員').name, '林雅婷');
+  assert.equal(f('敬上\n王 大 明\n業務部').name, '王大明');
+  assert.equal(f('新竹\n張簡美玲\n負責人').name, '張簡美玲');
+  assert.deepEqual(f('歐陽志明 David Ouyang\nACME Inc.'), { name: '歐陽志明', nameEn: 'David Ouyang', company: 'ACME Inc.' });
+  assert.deepEqual(f('研發 中心\n陳 小 華 資深工程師'), { department: '研發中心', name: '陳小華', title: '資深工程師' });
+  assert.equal(f('姓名:李四\n總經理').name, '李四');
+});
+
+test('English phone labels must be whole words (Director is not "direct", Officer is not "office")', () => {
+  const f = P.parseCardText('Emily Carter\nDirector of Sales, APAC\nChief Financial Officer\nDirect: 02-1234-5678').fields;
+  assert.equal(f.title, 'Director of Sales, APAC / Chief Financial Officer');
+  assert.equal(f.tel, '02-1234-5678');
+});

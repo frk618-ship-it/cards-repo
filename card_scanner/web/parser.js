@@ -33,11 +33,17 @@
   const PHONE_RE = /(\+?\(?\d[\d\s\-().\/]{5,}\d)(\s*(#|ext\.?|轉|分機|x)\s*\d{1,6})?/i;
 
   // 長標籤冒號可省略;單一字母標籤(T、F、M、A…)必須接冒號,避免把「ACME」的 A 當成地址標籤
-  const label = (long, short) => new RegExp('^(?:(?:' + long + ')\\s*[:.]?' + (short ? '|(?:' + short + ')\\s*[:.]' : '') + ')\\s*', 'i');
+  // 英文標籤必須是完整的字:「Director」不是「direct」、「Officer」不是「office」
+  const label = (long, short) => new RegExp('^(?:(?:' + long + ')(?![a-z])\\s*[:.]?' + (short ? '|(?:' + short + ')\\s*[:.]' : '') + ')\\s*', 'i');
+  // 電話類標籤:名片上標示為手機 / 電話 / 傳真的內容一定是號碼(見 parseCardText)
+  const MOBILE_L = '手\\s*機\\s*(?:號碼)?|行動\\s*電話|行\\s*動|携帯|휴대폰|핸드폰|mobile\\s*phone|mobile|mob|cell\\s*phone|cellphone|cell|📱|\\(m\\)';
+  const FAX_L = '傳\\s*真|传真|fax|facsimile|팩스|📠|\\(f\\)';
+  const TEL_L = '電\\s*話|电话|市話|公司電話|辦公室|總機|專線|直撥|直線|代表號|tel|telephone|phone|office|direct|전화|☎|📞|✆|℡|\\([toh]\\)';
   const LABELS = {
-    mobile: label('手機|行動電話|行動|mobile|mob|cell|cellphone', 'm'),
-    fax: label('傳真|fax', 'f'),
-    tel: label('電話|市話|公司電話|總機|專線|tel|telephone|phone|office', 't|o|p'),
+    mobile: label(MOBILE_L, 'm'),
+    fax: label(FAX_L, 'f'),
+    tel: label(TEL_L, 't|o|p|h'),
+    name: label('姓\\s*名|name'),
     email: label('e-?mail|電子郵件|信箱|郵件', 'e'),
     website: label('網址|網站|website|web|url', 'w'),
     address: label('地址|公司地址|住址|address|addr|add', 'a'),
@@ -49,6 +55,20 @@
     return s.replace(/[^\d+#()\- ]/g, '').replace(/\s+/g, ' ').replace(/\s*-\s*/g, '-').trim();
   }
   function phoneDigits(s) { return String(s || '').replace(/\D/g, ''); }
+  /** 從一段文字取出所有電話號碼(「0912-345-678 / 0988-111-222」、「02-1234-5678 轉 12」) */
+  function phoneNumbers(text) {
+    const out = [];
+    for (const part of String(text).split(/\s*(?:[\/、,;]|\s{2,}|或)\s*/)) {
+      const ph = part.match(PHONE_RE);
+      if (!ph) continue;
+      const d = phoneDigits(ph[1]);
+      if (d.length < 6 || d.length > 15) continue;
+      out.push(cleanPhone(ph[1]) + (ph[2] ? ' #' + phoneDigits(ph[2]) : ''));
+    }
+    // 「(02)」這種區碼被切開時,整段再試一次
+    if (!out.length) { const ph = String(text).match(PHONE_RE); if (ph && phoneDigits(ph[1]).length >= 6 && phoneDigits(ph[1]).length <= 15) out.push(cleanPhone(ph[1]) + (ph[2] ? ' #' + phoneDigits(ph[2]) : '')); }
+    return out;
+  }
   function isMobile(p) {
     const d = phoneDigits(p);
     const intl = /^\s*(\+|00)/.test(p);
@@ -64,13 +84,33 @@
 
   // 一行裡可能同時有「T: 02-1234 F: 02-5678」:依標籤切段
   function splitLabeled(line) {
-    const re = /(手機|行動電話|電話|傳真|分機|統一編號|統編|E-?mail|Mobile|Mob|Cell|Tel|Phone|Fax|Office|\bT\b|\bF\b|\bM\b|\bO\b)\s*[:.]/gi;
+    const re = new RegExp('(?:(?:' + [MOBILE_L, FAX_L, TEL_L, '分機|統一編號|統編|e-?mail'].join('|') + ')\\s*[:.]?(?=\\s*[+(\\d])|(?:\\b[tfmoh]\\b|e-?mail)\\s*[:.])', 'gi');
     const idx = [];
     let m;
     while ((m = re.exec(line))) idx.push(m.index);
     if (idx.length < 2) return [line];
     if (idx[0] > 0) idx.unshift(0);
     return idx.map((s, i) => line.slice(s, idx[i + 1]).trim()).filter(Boolean);
+  }
+
+  // 名片上的姓名幾乎都沒有「姓名:」標籤,直接列出(通常字最大)。以常見姓氏、字數、不在常見非姓名詞表中來判斷
+  const COMPOUND_SURNAMES = ['歐陽', '司馬', '諸葛', '上官', '張簡', '范姜', '東方', '皇甫', '司徒', '公孫', '令狐', '慕容', '尉遲', '長孫', '夏侯', '端木', '徐辜', '張廖', '簡廖', '周黃', '劉張', '江謝', '陳李', '黃陳'];
+  const SURNAMES = new Set(('陳林黃張李王吳劉蔡楊許鄭謝洪郭邱曾廖賴徐周葉蘇莊呂江何蕭羅高潘簡朱鍾游彭詹胡施沈余盧梁趙顏柯翁魏孫戴范方宋鄧杜傅侯曹薛丁卓阮馬董温溫唐藍石蔣古紀姚連馮歐程湯黎田康姜白汪鄒尤巫鐘涂龔嚴韓袁金童陸夏柳凃邵錢伍倪溫于譚駱熊任甘秦顧毛章史官萬俞雷粘饒張闕凌崔尹孔辛武辜陶段龍韋葛池孟褚殷麥賀賈莫文管關向包丘梅華利裴樊房全佘左花齊鄞卜伊竇巴喬冉祝鄔車談舒宮滕牛聶尚畢耿岳'
+    + '陈刘杨许郑谢郭邱曾赖叶苏庄吕罗萧钟胡沈卢梁赵颜魏孙戴邓杜曹薛董温蓝蒋纪连冯欧汤汪邹巫涂龚严韩袁陆钱伦谭骆顾万俞饶阙尹辜陶龙韦叶贺贾关裴乔聂毕').split(''));
+  // 名片上常見、長度像姓名卻不是姓名的詞
+  const NOT_NAMES = new Set(['敬上', '謹上', '敬啟', '台灣', '臺灣', '中國', '日本', '總公司', '分公司', '營業處', '服務處', '辦事處', '工廠', '門市', '總部', '本部', '歡迎', '聯絡', '聯絡人', '簡介', '地圖', '營業時間',
+    '服務項目', '產品', '服務', '專業', '品質', '誠信', '創新', '官網', '官方網站', '粉絲團', '掃描', '加入', '好友', '新竹', '台北', '臺北', '台中', '臺中', '台南', '臺南', '高雄', '桃園', '竹北', '總代理', '經銷', '代理', '客服', '專線']);
+  function surnameOf(name) {
+    const c = COMPOUND_SURNAMES.find(x => name.startsWith(x) && name.length >= 3);
+    return c || (SURNAMES.has(name[0]) ? name[0] : '');
+  }
+  /** 姓名候選的分數(0 = 不是姓名):有常見姓氏、3 字最常見 */
+  function nameScore(compact) {
+    if (!looksLikeName(compact) || NOT_NAMES.has(compact)) return 0;
+    let sc = 1;
+    if (surnameOf(compact)) sc += 3;
+    if (compact.length === 3) sc += 1.5; else if (compact.length === 2) sc += 0.5; else if (compact.length === 4 && COMPOUND_SURNAMES.some(x => compact.startsWith(x))) sc += 1.5;
+    return sc;
   }
 
   function looksLikeName(line) {
@@ -98,6 +138,16 @@
       .replace(/(?<=\d)[Il|!](?=\d)|(?<=[\d\-])[Il|](?=[\d\-])/g, '1')
       .replace(/(?<=\d)S(?=\d)/g, '5').replace(/(?<=\d)B(?=\d)/g, '8');
   }
+  // 已知是電話欄(有標籤):整段只有數字與長得像數字的字母時,全部換成數字
+  const LOOKALIKE = { O: '0', o: '0', D: '0', Q: '0', I: '1', l: '1', '|': '1', '!': '1', i: '1', Z: '2', z: '2', S: '5', s: '5', B: '8', G: '6', b: '6', g: '9', q: '9' };
+  function digitsOnly(s) {
+    const t = String(s).trim();
+    const core = t.replace(/(\s*(#|ext\.?|轉|分機|x)\s*\S+)$/i, '');
+    if (/^[\d\s\-+().\/OoDQIl|!iZzSsBGbgq]+$/.test(core) && /\d/.test(core)) {
+      return core.replace(/[OoDQIl|!iZzSsBGbgq]/g, c => LOOKALIKE[c]) + t.slice(core.length).replace(/[OoIl|]/g, c => LOOKALIKE[c]);
+    }
+    return fixDigits(t);
+  }
   function fixEmail(s) {
     return s.replace(/[©®]|\(at\)|\[at\]/gi, '@').replace(/\s*@\s*/g, '@').replace(/\s*\.\s*(?=[a-z]{2,}\b)/gi, '.')
       .replace(/\.(conm|corn|c0m|cotn|comn|cam|con)(?=\.|\b|$)/gi, '.com').replace(/\.c0(?=\.)/gi, '.co');
@@ -116,7 +166,7 @@
   function fixTitle(s) {
     const t = s.replace(/\s+$/, '');
     const tail = t.slice(-2);
-    if (!/^[\u3400-\u9fff]{2}$/.test(tail) || TITLE_TAIL.includes(tail) || TITLE_RE.test(tail)) return s;
+    if (!/^[\u3400-\u9fff]{2}$/.test(tail) || TITLE_TAIL.includes(tail) || TITLE_RE.test(tail) || TITLE_WORDS.some(w => t.endsWith(w))) return s;
     const cand = TITLE_TAIL.filter(w => w[1] === tail[1] || w[0] === tail[0]);
     return cand.length === 1 ? t.slice(0, -2) + cand[0] : s;
   }
@@ -131,14 +181,21 @@
       const toks = l.split(' ').filter(t => reCJK.test(t));
       return toks.length >= 2 && toks.filter(t => t.length === 1).length / toks.length >= 0.7;
     };
-    const joinCJK = new RegExp('([' + CJK + '])\\s+(?=[' + CJK + '])', 'g');
+    // 只把連續的單一中文字接起來:「陳 小 華 資深工程師」→「陳小華 資深工程師」
+    const joinSingles = l => l.split(' ').reduce((acc, tok) => {
+      const prev = acc[acc.length - 1];
+      if (prev && prev.single && tok.length === 1 && reCJK.test(tok)) { prev.t += tok; return acc; }
+      acc.push({ t: tok, single: tok.length === 1 && reCJK.test(tok) });
+      return acc;
+    }, []).map(x => x.t).join(' ');
     // 左右分欄的名片:OCR 保留的大段空白(3 格以上)視為欄位分隔,拆成獨立的行
     const lines = toHalfWidth(text).split(/\r?\n|[ \t]{3,}/)
       .map(l => l.replace(/[|¦]/g, ' ').replace(/\s+/g, ' ').trim())
-      .map(l => (spacedOut(l) ? l.replace(joinCJK, '$1') : l))
+      .map(l => (spacedOut(l) ? joinSingles(l) : l))
       .map(cleanNoise)
       .filter(l => (l.length > 1 || /^(號|樓|室)$/.test(l)) && !/^[^\w\u3400-\u9fff]+$/.test(l));
     const pending = []; // 先處理有明確格式的,剩下的再判斷姓名/公司/職稱
+    let pendingPhone = null; // 只有電話標籤、號碼在下一行時記住標籤
 
     for (const raw of lines) {
       for (let seg of splitLabeled(raw)) {
@@ -153,12 +210,23 @@
 
         let label = null;
         for (const k of ['mobile', 'fax', 'tel']) if (LABELS[k].test(seg)) { label = k; break; }
-        const body = fixDigits(label ? seg.replace(LABELS[label], '') : seg);
+        // 標籤單獨一行、號碼在下一行:沿用上一行的標籤
+        if (!label && pendingPhone && /\d/.test(seg) && !reCJK.test(seg.replace(/(轉|分機)/g, ''))) label = pendingPhone;
+        pendingPhone = null;
+        if (label) {
+          // 有電話類標籤的內容一定是電話:取出號碼,不會被當成其他欄位
+          const body = digitsOnly(seg.replace(LABELS[label], ''));
+          const nums = phoneNumbers(body);
+          if (nums.length) nums.forEach(n => addTo(fields, label, n));
+          else if (phoneDigits(body).length >= 4) addTo(fields, label, cleanPhone(body)); // OCR 糊掉也留在電話欄,待人工核對
+          else if (!phoneDigits(body)) pendingPhone = label;
+          continue;
+        }
+        const body = fixDigits(seg);
         const ph = body.match(PHONE_RE);
         const digits = ph ? phoneDigits(ph[1]) : '';
-        if (ph && digits.length >= 7 && digits.length <= 15 && (label || ph[0].length >= body.replace(/\s/g, '').length * 0.6)) {
-          const num = cleanPhone(ph[1]) + (ph[2] ? ' #' + phoneDigits(ph[2]) : '');
-          addTo(fields, label || (isMobile(num) ? 'mobile' : 'tel'), num);
+        if (ph && digits.length >= 7 && digits.length <= 15 && ph[0].length >= body.replace(/\s/g, '').length * 0.6) {
+          for (const num of phoneNumbers(body)) addTo(fields, isMobile(num) ? 'mobile' : 'tel', num);
           continue;
         }
 
@@ -176,8 +244,34 @@
       }
     }
 
-    for (const seg of pending) {
+    // 先在所有剩下的行裡找出最像姓名的一行:單獨的姓名、「姓名 職稱」、「姓名 English Name」、或有「姓名:」標籤的行
+    const nameRe = new RegExp('^([' + CJK + '·・]{2,5})\\s+(.+)$');
+    let bestName = null;
+    pending.forEach((seg, i) => {
+      let cand = null, extra = null, sc = 0;
+      if (LABELS.name.test(seg)) { cand = seg.replace(LABELS.name, '').replace(/\s+/g, ''); sc = 100; }
+      else {
+        const compact = seg.replace(/\s+/g, '');
+        sc = nameScore(compact);
+        if (sc) cand = compact;
+        const m = seg.match(nameRe);
+        if (m) {
+          const head = m[1].replace(/\s+/g, ''), rest = m[2].trim(), hs = nameScore(head);
+          const restIsTitle = TITLE_RE.test(rest) && rest.length <= 30, restIsEn = /^[A-Za-z][A-Za-z.'\- ]{2,40}$/.test(rest) && !COMPANY_RE.test(rest);
+          if (hs && (restIsTitle || restIsEn) && hs + 0.5 > sc) { cand = head; extra = restIsTitle ? { title: rest } : { nameEn: rest }; sc = hs + 0.5; }
+        }
+      }
+      if (cand && (!bestName || sc > bestName.sc)) bestName = { i, name: cand, extra, sc };
+    });
+
+    for (const [i, seg] of pending.entries()) {
       const compact = seg.replace(/\s+/g, '');
+      if (bestName && i === bestName.i) {
+        fields.name = bestName.name;
+        if (bestName.extra && bestName.extra.title) addTo(fields, 'title', bestName.extra.title);
+        if (bestName.extra && bestName.extra.nameEn) fields.nameEn = bestName.extra.nameEn;
+        continue;
+      }
       // 地址被拆成兩行(「…三路 9」+「號」或「…路」+「18 號 3 樓」)
       if (/^[\d\s\-之]*(號|樓|室|F)/.test(compact) && compact.length <= 10 && /[\u3400-\u9fff]/.test(compact)) {
         const last = fields.address ? fields.address.split(' / ').pop() : '';
@@ -193,10 +287,6 @@
         else unmatched.push(seg);
         continue;
       }
-      // 「王大明 業務經理」:姓名與職稱同一行
-      const nt = seg.match(new RegExp('^([' + CJK + ']{2,4})\\s+(.+)$'));
-      if (nt && !fields.name && looksLikeName(nt[1]) && TITLE_RE.test(nt[2])) { fields.name = nt[1]; fields.title = nt[2]; continue; }
-      if (!fields.name && looksLikeName(seg)) { fields.name = compact; continue; }
       if (/^[^\s]{1,12}(部|處|課|室|組|中心|事業群|事業部|實驗室)$/.test(compact) && !fields.department) { fields.department = compact; continue; }
       if (TITLE_RE.test(seg) && seg.length <= 40) {
         const dm = seg.match(DEPT_RE);
